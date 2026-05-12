@@ -1,0 +1,1868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Hollow Crown of Vehl — Listener</title>
+<meta name="theme-color" content="#0b0b0b">
+<style>
+  :root{
+    --bg:        #0b0b0b;
+    --bg-soft:   #15151a;
+    --panel:     #1a1a24;
+    --ink:       #f5e9c8;
+    --ink-dim:   #a89a78;
+    --gold:      #d4b97a;
+    --gold-hot:  #ecd28b;
+    --border:    #2a2a30;
+    --hilite:    rgba(212,185,122,0.18);
+    --hilite-edge: rgba(212,185,122,0.55);
+    --ledger:    #e8dcb8;
+    --shadow:    0 10px 40px rgba(0,0,0,0.6);
+    --max-read:  720px;
+    --danger:    #e07a6a;
+    --good:      #8ec98c;
+    --fs-body:   1.35rem;
+    --lh-body:   1.85;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+  body{
+    font-family: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background-image:
+      radial-gradient(rgba(212,185,122,0.025) 1px, transparent 1px),
+      radial-gradient(rgba(212,185,122,0.02) 1px, transparent 1px);
+    background-size: 3px 3px, 7px 7px;
+    background-position: 0 0, 1px 2px;
+    z-index:1; mix-blend-mode: screen;
+  }
+
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background: linear-gradient(180deg, rgba(11,11,11,0.97) 0%, rgba(11,11,11,0.85) 90%, rgba(11,11,11,0) 100%);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 14px 22px 22px;
+  }
+  .topbar-inner{
+    max-width: var(--max-read); margin: 0 auto;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .crest{
+    font-family:"Optima","Avenir Next","Helvetica Neue",sans-serif;
+    font-weight:600; letter-spacing:0.22em; text-transform:uppercase;
+    color:var(--gold); font-size:0.78rem; flex:1; min-width:0;
+  }
+  .crest small{display:block; color:var(--ink-dim); font-weight:500; letter-spacing:0.16em; margin-top:3px}
+
+  .control{
+    appearance:none; -webkit-appearance:none;
+    background:transparent; color:var(--ink);
+    border:1px solid var(--border); border-radius:999px;
+    padding:9px 16px; font:inherit; font-size:0.95rem;
+    cursor:pointer; transition:all 160ms ease;
+    display:inline-flex; align-items:center; gap:8px; line-height:1;
+  }
+  .control:hover{border-color:var(--gold); color:var(--gold);}
+  .control:active{transform:translateY(1px);}
+  .control:disabled{opacity:0.4; cursor:not-allowed;}
+  .control.primary{
+    background:var(--gold); color:#0b0b0b; border-color:var(--gold);
+    font-weight:700; padding:11px 22px;
+    box-shadow:0 4px 24px rgba(212,185,122,0.25);
+  }
+  .control.primary:hover{background:var(--gold-hot); color:#0b0b0b;}
+  .control.warn{ border-color: var(--danger); color: var(--danger); }
+  .control.warn:hover{ background: var(--danger); color: #0b0b0b; }
+
+  .icon{width:18px; height:18px; display:inline-block; vertical-align:middle;}
+  svg{display:inline-block; vertical-align:middle;}
+
+  .settings{
+    max-width:var(--max-read); margin:0 auto; padding:0 22px;
+    display:grid; gap:18px; overflow:hidden;
+    max-height:0; opacity:0;
+    transition: max-height 320ms ease, opacity 220ms ease, padding 220ms ease;
+  }
+  .settings.open{ max-height: 1600px; opacity:1; padding:18px 22px 6px;}
+  .field label{
+    display:block; font-family:"Optima","Avenir Next",sans-serif;
+    letter-spacing:0.18em; text-transform:uppercase;
+    font-size:0.72rem; color:var(--ink-dim); margin-bottom:8px;
+  }
+  .field select,
+  .field input[type="text"],
+  .field input[type="password"],
+  .field input[type="range"]{
+    width:100%; background:var(--bg-soft); color:var(--ink);
+    border:1px solid var(--border); border-radius:12px;
+    padding:12px 14px; font:inherit; font-size:1rem;
+    appearance:none; -webkit-appearance:none;
+  }
+  .field select:focus,
+  .field input:focus{outline:1px solid var(--gold); border-color:var(--gold);}
+  .row{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:0.95rem; color:var(--ink-dim); gap:10px;
+  }
+  .row strong{ color:var(--ink); }
+  .hint{
+    color:var(--ink-dim); font-size:0.85rem;
+    margin-top:8px; line-height:1.5;
+  }
+  .hint a{ color: var(--gold); text-decoration: underline; }
+  .key-row{ display:flex; gap:8px; align-items:stretch; }
+  .key-row input{ flex:1; min-width:0; }
+  .key-row button{ flex-shrink:0; }
+
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none; height:6px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--pct,50%),
+                                       var(--border) var(--pct,50%), var(--border) 100%);
+    border-radius:999px; padding:0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:20px; height:20px;
+    border-radius:50%; background:var(--gold-hot); border:2px solid #0b0b0b;
+    cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%; background:var(--gold-hot);
+    border:2px solid #0b0b0b; cursor:pointer;
+  }
+
+  .chapters{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+  .chip{
+    padding:8px 14px; border-radius:999px; background:transparent;
+    border:1px solid var(--border); color:var(--ink-dim);
+    cursor:pointer; font:inherit; font-size:0.9rem;
+    transition:all 160ms ease;
+  }
+  .chip:hover{color:var(--ink); border-color:var(--ink-dim);}
+  .chip.active{ background:var(--gold); color:#0b0b0b; border-color:var(--gold); font-weight:700; }
+  .chip .badge{
+    margin-left:8px; font-size:0.75rem;
+  }
+
+  .status-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 12px; border-radius:999px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--ink-dim); font-size: 0.82rem; margin-top: 8px;
+  }
+  .status-pill .dot{ width:8px; height:8px; border-radius:50%; background: var(--ink-dim); }
+  .status-pill.ready .dot{ background: var(--good); }
+  .status-pill.error .dot{ background: var(--danger); }
+  .status-pill.working .dot{ background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  .gen-progress{
+    height: 6px; background: var(--border); border-radius: 999px;
+    overflow: hidden; margin-top: 12px; display: none;
+  }
+  .gen-progress.show{ display: block; }
+  .gen-progress > div{
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-hot));
+    transition: width 250ms ease;
+  }
+
+  main{
+    position:relative;
+    max-width:var(--max-read); margin:0 auto;
+    padding:40px 22px 200px; z-index:2;
+  }
+  .frontmatter{
+    text-align:center; margin:24px 0 56px;
+    padding-bottom:36px; border-bottom:1px solid var(--border);
+  }
+  .title-display{
+    font-family:"Optima","Avenir Next","Helvetica Neue",sans-serif;
+    font-weight:700; font-size:clamp(1.6rem, 5vw, 2.4rem);
+    letter-spacing:0.08em; color:var(--gold);
+    line-height:1.15; margin:0 0 14px;
+  }
+  .subtitle-display{
+    font-style:italic; color:var(--ink-dim);
+    font-size:1.05rem; letter-spacing:0.04em; margin:0;
+  }
+  .chapter-eyebrow{
+    font-family:"Optima","Avenir Next",sans-serif;
+    text-transform:uppercase; letter-spacing:0.4em;
+    font-size:0.72rem; color:var(--ink-dim); margin:36px 0 12px;
+  }
+  .chapter-title{
+    font-family:"Optima","Avenir Next","Helvetica Neue",sans-serif;
+    font-weight:700; font-size:clamp(1.4rem, 4.5vw, 2rem);
+    letter-spacing:0.06em; color:var(--gold); margin:0 0 8px;
+  }
+  .body-prose > p:first-of-type::first-letter{
+    font-family:"Optima","Avenir Next",serif; font-weight:700;
+    color:var(--gold); float:left; font-size:3.6em; line-height:0.9;
+    padding:0.08em 0.12em 0 0;
+  }
+  p{margin:0 0 1.1em; text-align:left;}
+
+  .s{
+    border-radius:4px; padding:2px 1px; margin:0 -1px;
+    transition: background 280ms ease, color 280ms ease, box-shadow 280ms ease;
+    cursor:pointer;
+  }
+  .s:hover{background:rgba(212,185,122,0.07);}
+  .s.spoken{color:var(--ink-dim);}
+  .s.active{
+    background:var(--hilite); color:var(--ink);
+    box-shadow: inset 0 -2px 0 0 var(--hilite-edge);
+  }
+
+  .ledger{
+    background:var(--panel); border:1px solid var(--gold);
+    border-radius:6px; padding:18px 22px; margin:28px 0;
+    color:var(--ledger);
+    font-family:"SF Mono","JetBrains Mono","Menlo","Consolas",monospace;
+    font-size:0.92rem; line-height:1.55; white-space:pre-wrap;
+    box-shadow: var(--shadow), 0 0 0 1px rgba(212,185,122,0.15) inset;
+    position:relative;
+  }
+  .ledger::before{
+    content:"THE LEDGER"; position:absolute; top:-10px; left:18px;
+    background:var(--bg); color:var(--gold); padding:0 10px;
+    font-family:"Optima","Avenir Next",sans-serif;
+    font-size:0.7rem; letter-spacing:0.3em; font-weight:700;
+  }
+
+  .endmark{
+    text-align:center; color:var(--ink-dim);
+    font-style:italic; margin:64px 0 0; letter-spacing:0.06em;
+  }
+
+  .dock{
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background: linear-gradient(0deg, rgba(11,11,11,0.98) 60%, rgba(11,11,11,0.85) 90%, rgba(11,11,11,0) 100%);
+    padding: 22px 16px max(22px, env(safe-area-inset-bottom));
+    pointer-events:none;
+  }
+  .dock-inner{
+    max-width:var(--max-read); margin:0 auto;
+    background:var(--bg-soft); border:1px solid var(--border);
+    border-radius:999px; padding:6px 6px 6px 18px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow: var(--shadow); pointer-events:auto;
+  }
+  .dock .progress{
+    flex:1; height:4px; background:var(--border);
+    border-radius:999px; position:relative; overflow:hidden; cursor:pointer;
+  }
+  .dock .progress::after{
+    content:""; position:absolute; left:0; top:0; bottom:0;
+    width:var(--p,0%);
+    background: linear-gradient(90deg, var(--gold), var(--gold-hot));
+    transition: width 100ms linear;
+  }
+  .dock .timecode{
+    font-family:"SF Mono","JetBrains Mono",monospace;
+    font-size:0.78rem; color:var(--ink-dim); white-space:nowrap;
+  }
+  .dock .play{
+    width:48px; height:48px; border-radius:999px;
+    background:var(--gold); color:#0b0b0b; border:none;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+    transition:all 160ms ease; flex-shrink:0;
+  }
+  .dock .play:hover{background:var(--gold-hot); transform:scale(1.04);}
+  .dock .play:active{transform:scale(0.97);}
+  .dock .play:disabled{ background: var(--border); color: var(--ink-dim); cursor:not-allowed; transform: none;}
+  .dock .skip{
+    width:38px; height:38px; border-radius:999px;
+    background:transparent; color:var(--ink);
+    border:1px solid var(--border); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:all 160ms ease; flex-shrink:0;
+  }
+  .dock .skip:hover{border-color:var(--gold); color:var(--gold);}
+
+  .audio-cta{
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 0 0 26px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .audio-cta h3{
+    margin:0; font-family:"Optima","Avenir Next",sans-serif;
+    font-size: 0.95rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); font-weight: 700;
+  }
+  .audio-cta p{
+    margin: 0; color: var(--ink-dim); font-size: 0.95rem; line-height: 1.5;
+  }
+  .audio-cta .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .toast{
+    position:fixed; left:50%; bottom:110px;
+    transform:translate(-50%, 20px);
+    background:var(--panel); color:var(--ink);
+    border:1px solid var(--gold); border-radius:999px;
+    padding:10px 18px; font-size:0.88rem;
+    box-shadow: var(--shadow); z-index:100;
+    pointer-events:none; opacity:0;
+    transition: opacity 220ms ease, transform 220ms ease;
+    max-width: 86vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+  .toast.error{ border-color: var(--danger); }
+  .toast.good{ border-color: var(--good); }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+  @media (max-width: 540px){
+    main{ padding:28px 18px 200px; }
+    .topbar{ padding:12px 14px 18px; }
+    .topbar-inner{ gap:10px; }
+    :root{ --fs-body:1.22rem; --lh-body:1.8; }
+    .control{ padding:8px 13px; font-size:0.88rem; }
+    .control.primary{ padding:10px 18px; }
+    .crest{ font-size:0.7rem; }
+    .ledger{ font-size:0.78rem; padding:14px 16px; }
+    .dock-inner{ padding:5px 5px 5px 14px; gap:8px; }
+    .dock .timecode{ display:none; }
+  }
+  .topbar.hidden{ transform:translateY(-100%); transition:transform 320ms ease; }
+
+  .spinner{
+    display:inline-block; width:14px; height:14px;
+    border-radius:50%;
+    border:2px solid rgba(0,0,0,0.25);
+    border-top-color:#0b0b0b;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <div class="crest">
+      The Hollow Crown of Vehl
+      <small>Book I &middot; The Eighth Ash</small>
+    </div>
+    <button class="control" id="btn-settings" aria-expanded="false" aria-controls="settings">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </div>
+
+  <div class="settings" id="settings" role="region" aria-label="Player settings">
+
+    <div class="field">
+      <label>Google Cloud Text-to-Speech API key</label>
+      <div class="key-row">
+        <input id="apikey" type="password" placeholder="Paste your API key (AIza...)" autocomplete="off" spellcheck="false">
+        <button class="control" id="btn-save-key">Save</button>
+      </div>
+      <div id="key-status" class="status-pill"><span class="dot"></span><span class="text">no key set</span></div>
+      <p class="hint">
+        Stored only in this browser. Used to call Google's TTS API directly from your device &mdash; your key and the chapter text never go to anyone else.<br>
+        Free tier: 1 million standard / 100k Neural &amp; Chirp HD characters/month.
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Get a key &rarr;</a>
+      </p>
+    </div>
+
+    <div class="field">
+      <label>Narrator voice</label>
+      <select id="voice"></select>
+      <p class="hint">Chirp 3 HD voices are the highest quality and the best fit for long-form narration. WaveNet voices use 4&times; fewer characters from your monthly quota.</p>
+    </div>
+
+    <div class="field">
+      <div class="row" style="margin-bottom:8px;"><label style="margin:0">Reading speed</label><strong id="rateLabel">1.00&times;</strong></div>
+      <input id="rate" type="range" min="0.5" max="2.0" step="0.05" value="1.0">
+      <p class="hint">Changes playback speed of the generated audio. No regeneration needed.</p>
+    </div>
+
+    <div class="field">
+      <label>Chapter</label>
+      <div class="chapters" id="chapters"></div>
+    </div>
+
+    <div class="field">
+      <label>Cached audio</label>
+      <div class="row" style="margin-bottom:10px;">
+        <span id="cache-summary" class="hint" style="margin:0">checking&hellip;</span>
+        <button class="control warn" id="btn-clear-cache">Clear cached audio</button>
+      </div>
+    </div>
+
+    <div class="field" style="text-align:right; opacity:0.55;">
+      <span class="hint" style="margin:0; font-family:'SF Mono','JetBrains Mono',monospace; font-size:0.7rem;">build 2026-05-11.r4</span>
+    </div>
+
+  </div>
+</div>
+
+<main id="reader">
+  <div class="frontmatter">
+    <p class="title-display">The Hollow Crown<br>of Vehl</p>
+    <p class="subtitle-display">a series in ten books &middot; Book I, The Eighth Ash</p>
+  </div>
+
+  <div class="audio-cta" id="audio-cta">
+    <h3>Audiobook narration</h3>
+    <p id="cta-msg">Open settings and paste your Google Cloud TTS API key to generate studio-quality narration for this chapter.</p>
+    <div class="actions">
+      <button class="control primary" id="btn-generate">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span id="gen-label">Generate narration</span>
+      </button>
+      <button class="control" id="btn-open-settings">Open settings</button>
+    </div>
+    <div class="gen-progress" id="gen-progress"><div></div></div>
+    <div id="gen-error" style="display:none; margin-top:8px; padding:12px 14px; border-radius:10px; background:rgba(224,122,106,0.08); border:1px solid var(--danger); color:var(--ink); font-size:0.9rem; line-height:1.5; word-break:break-word; white-space:pre-wrap;"></div>
+  </div>
+
+  <div class="audio-cta" id="download-area" style="display:none; border-color: var(--gold);">
+    <h3>Download MP3</h3>
+    <p>Save this chapter's narration to your device as an MP3 file. Useful if browser caching isn't sticking, or if you want to play it in another audio app.</p>
+    <div class="actions">
+      <a id="dl-link" class="control primary" download>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download MP3</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="chapter-host"></div>
+</main>
+
+<div class="dock" role="region" aria-label="Audio player">
+  <div class="dock-inner">
+    <button class="skip" id="btn-back" aria-label="Back 10 seconds">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg>
+    </button>
+    <button class="play" id="btn-play" aria-label="Play / Pause" disabled>
+      <svg id="icon-play" class="icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      <svg id="icon-pause" class="icon" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    </button>
+    <button class="skip" id="btn-fwd" aria-label="Forward 10 seconds">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 4 21 9 16 9"/></svg>
+    </button>
+    <div class="progress" id="progress" role="progressbar"></div>
+    <div class="timecode" id="timecode">--:-- / --:--</div>
+  </div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<div class="toast" id="toast"></div>
+
+<script id="chapter-1" type="text/plain">
+TITLE: The Ledger Opens
+
+There were, Kael Veyne would later think, three mistakes.
+
+The first was getting off the train one stop early because the air on the platform smelled like rain and he wanted to walk. The second was choosing the staircase over the elevator at his apartment building because he had eaten too much at lunch and was, on this one specific Tuesday, trying to be the sort of person who took the stairs. The third was the only one that mattered.
+
+He was on the landing between the fourth and fifth floors when he heard the child laugh.
+
+It was a small sound, sharp and out of place, the kind of laugh that happens when a thing surprises a child before the child has had time to decide whether to be afraid of it. Kael paused with his hand on the railing. He was thirty-one years old. He had spent the last nine years of his life as an actuarial analyst at a mid-tier insurance firm in Marunouchi, and before that he had spent six years as a competitive chess player good enough to be ranked nationally and not good enough to be ranked anywhere else, and before that he had been a boy in Sapporo with a quiet mother and a father who only spoke at meals. He had built an entire adulthood on the discipline of reading a situation before he stepped into it.
+
+So when the child laughed, Kael's brain did what his brain always did. It assembled the variables.
+
+A child, alone, in a stairwell. Probability of supervised: low. Probability of safe: contingent. Sound of laughter — high and unguarded — suggesting the child has just seen something that delighted her. A delight that a child finds in a stairwell is almost always a thing falling. There had been scaffolding on the exterior of the building for three weeks, since the typhoon had cracked the cladding on the south face. The scaffolding ran past the fifth-floor landing window.
+
+Kael was already moving when he heard the second sound. The first sound had been a laugh. The second sound was a low groan of metal, the kind of groan that is not yet a scream.
+
+He took the stairs three at a time. He was not athletic. His knee gave a small protest at the third stride, which he registered and ignored. He came up onto the fifth floor landing and saw her — a girl, maybe four, in a yellow raincoat too big for her, standing on her toes with her nose pressed to the glass of the stairwell window, watching the loose end of a metal cross-brace swing in the wet air like a pendulum. She was laughing because it looked, to her, like a clock.
+
+The bolt that held the cross-brace had been loose for three weeks. The typhoon had been four weeks ago. Kael, who had recently filed a tenants' complaint about it that had gone unanswered, knew this. He had calculated, two days ago over breakfast, the load tolerance of the bracket and the angle of failure and had decided that the building manager was a coward and that the bracket would hold through the next rain, probably, and that on Friday he would email the manager again with the maths attached.
+
+It was not Friday. It was Tuesday. And the bolt was already gone.
+
+He saw the cross-brace begin to fall before the girl did. He saw, with the kind of cold clarity that had once let him see eight moves ahead on a board, the trajectory of the metal — through the window, into the stairwell, into the small head pressed to the glass. He saw the time he had. He measured it. He found it insufficient for any clever solution, any shouted warning, any clever positioning. There was only one solution available to him at the speed of the body he had, and the solution required the body.
+
+He thought, with a thin flicker of irritation that surprised him: I miscalculated the bracket.
+
+Then he hit the girl with his shoulder, hard, the way a man hits a door he expects to be locked. She went down sideways into the wall, all yellow raincoat and stunned breath, and the window came apart above them in a long bright sound, and the cross-brace came through.
+
+It did not hit him cleanly. Kael, who had read enough insurance reports to know how human bodies failed, had always assumed that if he died it would be cleanly — a heart attack at fifty-eight, a stroke at seventy, the small actuarial percentages that he had quietly bet his life would honor. The cross-brace took him in the side, just above the hip, and pinned him to the stair. Something in him made a sound that was not a sound. He went down onto one knee, and then onto both knees, and then he sat down, neatly, because his legs had stopped agreeing to hold him.
+
+The girl was screaming now. That was good. Screaming children were children whose airways worked.
+
+Kael looked down at himself, because looking down was easier than looking at her. There was a great deal of red. He noted, with the detached interest of a man reading a report on someone else, that the wound was probably mortal — the femoral was almost certainly involved, and the angle suggested the bracket had also crossed the iliac. He had perhaps ninety seconds of consciousness. He had perhaps three minutes of life. He had nothing useful to do with either.
+
+He thought, with as much warmth as he had ever felt about anything: I would like to know her name.
+
+He turned his head. It cost him. The girl had stopped screaming and had begun to do the more frightening thing, which was to be silent and stare. Her hood had fallen back. Her hair was very black, cut bluntly across her forehead, and her eyes were the wet round eyes of a child for whom the world has, in the last four seconds, become a place where adults bleed.
+
+"Hey," Kael said. His voice came out conversational, which surprised him. "Hey. Hi."
+
+She did not answer.
+
+"What's your name?"
+
+She did not answer.
+
+The edges of the stairwell were beginning to soften, which he understood to mean the blood loss was accelerating. He had a moment of pure, professional regret — he had not finished the model he had been building on his work laptop, a piece of actuarial silliness about the relative risks of cycling versus walking in central Tokyo by ward; it had been a personal project and he had been almost finished and now he would not get to know whether his hypothesis had been right.
+
+Then he had another thought, and the second thought was unexpected enough that he held onto it.
+
+He thought: I was a good calculator. I was not a good man. I was not a bad man either. I was a man who measured the world and tried not to lose to it. I would have liked, given more time, to have been better at something other than measurement.
+
+The girl had crept closer. She was within reach, if he had been able to reach. She was looking at him with her enormous wet eyes and her small wet mouth and Kael — who had not, since his mother's funeral, said anything kind out loud to another living person on purpose — said, with the last clean breath he had:
+
+"It's okay. You're safe. You're okay."
+
+He thought she might have nodded. He could not be sure.
+
+He thought: Tell me your name. Please.
+
+He did not get to ask aloud. The softening at the edges of the stairwell became a darkening, and the darkening became a tunnel, and the tunnel became —
+
+— a smell.
+
+The smell came first. Before vision, before sound, before the wet weight of the body. It came so strongly and so wrongly that for a moment Kael's only thought was: that is not a smell that should exist.
+
+It was the smell of meat that had been left in the sun, and under the meat was the smell of something herbal and burned, and under the herbal smoke was a third smell that he did not have a word for — a smell with the texture of cold iron and the temperature of fever. It was not, he understood with a slow and terrible patience, a smell from the world he had lived in.
+
+Then the sounds. A low, droning chant. Eight voices. Out of unison. One was almost laughing. One was sobbing.
+
+Then the cold. The cold came up through whatever he was lying on, which was wet and yielding in a way that flooring is not supposed to be, and the cold went into his back and into the back of his skull and he understood, before he opened his eyes, that he was lying on a body.
+
+He opened his eyes.
+
+For a long moment he did not understand what he was seeing, because the light was wrong. He was in a low stone room lit by torches that did not burn yellow but burned the color of bruised blood, a deep arterial red that made the shadows look thick enough to drink. The ceiling was a vault of black rock with chalk-white sigils smeared across it in lines that did not, when his eye tried to follow them, behave like lines. They moved. He looked away.
+
+There were eight figures in robes the color of dried blood standing in a ring. Their hoods were up. Their hands were lifted. They were chanting in a language that hurt the back of his throat to listen to, as though the syllables were taking small bites of him on the way past. In the center of the ring was a circle drawn in salt and ash and something darker, and inside the circle was —
+
+— him.
+
+But not him.
+
+He looked down at himself, and the looking took longer than it should have because his eyes did not focus the way his eyes had always focused. There were too many colors. The torchlight, which a moment ago he had thought of as red, was in fact red and several other things that he had no name for, colors that sat between the colors he knew the way half-steps sit between whole notes, and they made his head hurt in a clean small way.
+
+His body was not his body.
+
+The body was small. He could tell that immediately by the angle at which his chin met his chest. The body was small and it was the wrong shape and it was — he lifted one hand, with effort, and the hand that came up into his vision was not a hand he had ever owned. The fingers were long and thin and there were four of them and a thumb, which was correct, except that the fingers tapered to small black claws and the skin of the back of the hand was the color of a bruise that has begun to yellow at its edges, a deep mottled plum-purple shading at the knuckles toward something almost grey. He turned the hand over. The palm was paler. There was a sigil burned into it. The sigil was a Roman numeral, neat and clinical, as though stamped there by an office printer.
+
+VIII.
+
+"Eight," Kael said aloud, except that he did not say it aloud, because the voice that came out of his throat was not a voice he had ever owned either, and what came out was a small thin sound somewhere between a child's whimper and the chitter of an insect. He stopped. He closed his mouth — which had, he registered, more teeth than was reasonable — and lay very still.
+
+All right, he thought. All right. Stop. Stop. Inventory.
+
+It was the word he had used on himself in the office, when a model was failing and he could feel the panic begin in his hands. Inventory. He made himself, lying on the wet thing under him, take stock.
+
+One: he was alive. Or he was something that was experiencing the sensation of being alive, which for the moment was operationally identical.
+
+Two: he was not in his body.
+
+Three: he was in a body. The body was small, eighteen inches perhaps from heel to crown. The body had clawed hands and, when he carefully shifted, a tail that lay across his thigh like a heavy rope. The body had a sigil on its palm that said EIGHT.
+
+Four: there were eight cultists in a ring around him, chanting, and they did not yet appear to have noticed that he had opened his eyes.
+
+Five: he was lying on a body. He could feel a ribcage under his shoulderblade, and a face under the back of his head, and the wetness was blood, and the blood was not his.
+
+Six: the air, in front of his eyes, was holding a pane of cold blue light.
+
+He had been trying not to look at it directly. He had registered it in the periphery of vision the moment he had opened his eyes, and his brain, presented with too many impossibilities at once, had triaged it as something to be addressed third or fourth. Now he looked.
+
+It hung there as if it were printed on the air. It was rectangular. It was the precise calm cobalt of a computer screen in a dim room. It had a faint border, slightly thicker at the corners, like a window in an old operating system. Words were written across it in a clean serifed script that he understood without having to translate, although the language was not Japanese and not English and not Mandarin and not, he was reasonably sure, any language at all.
+
+The window said: Welcome, Candidate.
+
+He stared at it. It updated.
+
+Candidate Eight, Registered. Soul-Brand applied, palm, left. Body assigned, Imp of the Eighth Ash. Ledger initiating. Please remain still.
+
+"All right," Kael breathed, and this time the small chittering sound he made was very nearly a laugh, because at some point in the last forty seconds he had crossed the threshold past which the impossible stopped being terrifying and became, briefly, hilarious. He was dead. He was in a dungeon. He had a tail. He had a tutorial pop-up.
+
+He had, somewhere on the other side of dying, evidently fallen into a video game written by somebody with a sense of humor.
+
+The cultists had not stopped chanting. Their voices were rising. One of them — the one to Kael's left, the laughing one — was nearly singing now, in a high cracked tone that suggested the long ritual was coming to its climax. They had not looked down. They had not noticed that the thing in the circle was awake and was, at this moment, having a series of revelations.
+
+Good, Kael thought. Stay not-looking. He needed the seconds.
+
+The window updated again. Ledger complete. Tap your palm against your sternum to open.
+
+He did not, immediately, do it.
+
+He lay still. He breathed, with the small unfamiliar lungs of the small unfamiliar body. He listened to the chant. He listened to the wet shifting of his own weight on the dead thing under him. He thought, with the clinical patience he had cultivated over thirty-one years of being the person at the table who did not panic: Whoever you are, system. Whoever wrote you. You are giving me information. Information is offered for reasons. The first reason a thing is offered freely is to bait a hook. The second reason is to make the recipient feel that they have agency that they do not have. The third reason — and this is the one I want — is because the entity offering the information genuinely needs the recipient to act, and the recipient's action benefits the entity offering the information. Which are you?
+
+The window did not answer that. The window was, he understood, not necessarily a conversation partner. It was an interface. Interfaces did not have intentions. The thing behind the interface had intentions. The thing behind the interface was, at the moment, both unknown and offering him a button to push.
+
+He pushed it.
+
+Not because he trusted it. He had never trusted a thing in his life. He pushed it because he was lying naked on a corpse in a room full of people who were going to notice him in approximately eleven seconds, and a button labeled Open was, in actuarial terms, his best play.
+
+He lifted his small clawed left hand, slowly, slowly, and pressed the palm — the one with VIII branded into it — against the small unfamiliar sternum of his small unfamiliar chest.
+
+The pane of light bloomed.
+
+It unfolded outward into something larger and more complicated, like a piece of origami undoing itself. It became a long ledger, written in two columns. It hung in the air over his face. The chanting did not stop. The cultists did not see it. It was for him alone.
+
+He read.
+
+[LEDGER]
+CANDIDATE:    KAEL VEYNE  (Soul-Brand: VIII)
+ORIGIN:       Surface-born, deceased
+FORM:         Imp of the Eighth Ash
+AGE:          0 days, 0 hours, 6 minutes
+STAGE:        1 of 13
+
+-- ATTRIBUTES --
+Vigor         [    1 ]   body / healing
+Sinew         [    1 ]   raw strength
+Quickness     [    4 ]   reflex / action
+Acumen        [   18 ]   pattern / calculation
+Will          [   12 ]   resistance / command
+Hunger        [    2 ]   capacity for debt
+
+UNSPENT POINTS:    5
+
+-- FACULTIES --
+* Debt-Sight (I)         passive
+* Tail Articulation      locked — develop
+* Lesser Reroute         locked — condition
+
+-- EVOLUTION --
+You are at Stage 1.   12 stages remain.
+Next stage is locked. Conditions visible: 0 of 5.
+
+-- DEBTS HELD --
+* The blood of the body beneath you (unspent)
+* One promise, made to a child you did not
+  finish saving.  The Ledger does not know
+  how to weigh this.  It will hold the line
+  open until you teach it.
+[/LEDGER]
+
+He read it. He read it again. He read it a third time, because his hands — even the small clawed hands he did not yet recognize as his — were beginning to shake, and he needed the third reading to be sure he had not, in his shock, hallucinated any of the words.
+
+He had not. The line was there. One promise, made to a child you did not finish saving.
+
+The girl. The yellow raincoat. The wet eyes.
+
+It's okay. You're safe. You're okay.
+
+He had told her she was safe. He had not, technically, been right. He had bought her perhaps eight seconds and a story she would tell for the rest of her life, but he had not, by any honest accounting, saved her. He had been struck. He had bled. He had not been able to follow her down the stairs or stay with her until the paramedics came or find her name.
+
+The Ledger was telling him that this counted as a promise. The Ledger was telling him that the promise was unweighed and that it was holding the line open.
+
+He understood, with the cold small clarity of a man who has been reading contracts professionally for nine years, that the Ledger had just told him three enormous things, hidden under the surface of one accounting note. One: the Ledger was not neutral. The Ledger had opinions. It had decided, on its own initiative, that a promise made to a child mattered enough to record. Two: it had used the word "you." It was speaking to him directly. It knew who he had been before. Three — and this was the one that made him press the small purple palm of his small purple hand against his small purple sternum to feel the small wrong heartbeat there: which meant something on this side of dying had wanted him specifically.
+
+The chanting reached its crescendo.
+
+The cultists, all eight of them, threw their arms up at the same moment and shouted a single word. The word was not in any language he understood, but he understood it anyway, because the word reverberated against the back of his skull and he felt the meaning rather than the syllables. The word meant, more or less: Bind.
+
+A line of cold ran around his throat.
+
+He did not see anything. There was no rope, no chain. But he felt, with a horrible specificity, a closed loop of pressure tighten around his neck, and tighten, and tighten, and he understood that he was being collared. He had, perhaps, a second.
+
+He looked at the Ledger.
+
+[LEDGER]
+DEBT INCOMING:   BINDING-COLLAR.
+SOURCE:          8 sigilists (ring).
+RECOMMENDED:     REROUTE.
+
+Faculty 'Lesser Reroute' unlocking —
+condition 1 of 1 (under duress).
+
+CONFIRM?    YES / NO
+[/LEDGER]
+
+Kael Veyne — actuarial analyst, former chess prodigy, dead man, Imp of the Eighth Ash, Candidate the Eighth for the seat of the Hollow Crown of a dead goddess of a world he had not yet seen the sky of — read the word Confirm, considered the word Confirm for perhaps a tenth of a second, and thought: Yes.
+
+He did not say it out loud. He did not need to. The Ledger seemed to take the thought as input.
+
+The pressure at his throat paused. It did not disappear. It paused, the way a wheel pauses at the top of a hill. And then it reversed. Whatever the eight sigilists had been pushing toward him began, very quietly, to flow back the way it had come.
+
+The cultist directly across the circle from him — the one who had been almost laughing — stopped almost-laughing.
+
+He made a small soft sound. It was the kind of sound a person made when something they did not understand had just happened in their chest.
+
+He fell forward into the circle.
+
+He fell stiffly, the way a man falls who has not put his hands out, because he no longer had the use of them. He landed across the salt line and the salt line burst into a small white flame that licked at his robe and went out. His hood came back. He was younger than Kael had expected. He had a thin face, and a mole at the corner of his mouth, and his eyes were open and they were staring at nothing, and at his throat there was a thin black line of bruising, neat as a drawn collar.
+
+The chant fell apart.
+
+The other seven cultists made the sounds people make when a thing they have rehearsed has gone wrong in a way they did not rehearse. One swore. One stepped back. One — the one to Kael's far right — began very quickly to undo the cord of his robe, as though he intended to run.
+
+The Ledger, calmly, helpfully, in its cold clean serif font, updated.
+
+[LEDGER]
+DEBT RESOLVED.
+Binding transferred to originator
+(rounding: 1 of 8).
+Kill credited.
+
+UNSPENT POINTS:   5  -->  7
+NEW DEBT HELD:   the death of one bound man.
+[/LEDGER]
+
+Kael Veyne sat up.
+
+It hurt. The small new body was not strong, and the sitting up was a thing the small new body had not yet been taught how to do. He used the tail — which was, he discovered, attached to his lower spine in a way that made it feel less like a limb and more like a thought he had not finished — to push against the corpse beneath him, and the corpse, he saw now, was a young woman in a robe like the cultists'. She had been opened at the chest. She had been used to make him. He registered this and set it aside; there was a place in him where he was going to grieve this woman properly later, and now was not that place.
+
+He stood up.
+
+He was eighteen inches tall. He came up to the knee of the nearest cultist, who was — by some small grace — the one who had been undoing his robe to run. The man saw him and stopped trying to run. He did the worse thing, which was to freeze.
+
+Kael looked at him.
+
+He had a clear sense, in the small back of his small skull, of a Ledger-line that he could see if he wanted to. He turned his attention toward it. The line said: Debt-Sight, passive. Subject, human sigilist, journeyman tier. Outstanding debts visible, three. One, owed to his mother, filial, thirty-one years, unpaid. Two, owed to the woman whose body he opened, life, half an hour, unpaid. Three, owed to himself, a vow of restraint, broken twice this season.
+
+Kael did not know what to do with the first or the third. The second was useful.
+
+He looked the cultist in the eye — he had to tilt his small head back a long way to do it — and he said, in the small chittering wrong voice that was now his, the only word he could think of that fit the moment: "Hers."
+
+The cultist did not understand the word, because the word was in a language Kael had not realized he was speaking. The cultist understood the meaning, because the Ledger between them did not need a shared language. The cultist understood that the debt he owed — the debt for the body of the woman he had cut open — had just been called.
+
+The cultist's knees gave.
+
+He did not die. The Ledger, Kael understood with a quiet animal clarity that he did not entirely recognize as his own, was not interested in killing him a second time. It was interested in making him pay. The cultist went to his knees and he stayed there, and the look on his face was the look of a man who had just been handed a bill so large that he understood he was going to spend the rest of his life paying it, and he had not even known, until this moment, that the bill existed.
+
+The other six cultists ran.
+
+Kael let them. He could not, with the small body, have caught them, and in any case the Ledger had not yet told him what to do with six fleeing journeymen, and Kael Veyne did not, as a rule, do things the Ledger had not yet costed.
+
+He stood in the broken circle. The torches still burned arterial-red. The body of the cultist he had killed by reroute lay across the salt with its mouth slightly open. The body of the young woman he had been born inside lay behind him, opened, cooling. The body of the surviving cultist knelt three feet away with the bill of one specific debt written down the front of his soul.
+
+Kael looked down at his small clawed hands. He turned them over. The VIII on the left palm was glowing very faintly, the cool blue of the Ledger itself.
+
+He sat down.
+
+He did not sit on the cooling woman, because he had decided, in the moment of standing up, that he was not yet the kind of creature who sat on the bodies of the dead unless he had no other option. He sat on the chest of the cultist he had killed, because the chest of the cultist he had killed was, of the available furniture, the one he owed the least to. He folded his small thin legs. He laid his tail across his knees, where he could see it, because he wanted to be able to see all of his new equipment at once. He pulled the Ledger close — it responded to his attention, sliding nearer in his field of vision, as obedient as any good tool.
+
+He breathed.
+
+He could feel, somewhere far above his head — through, he understood, several hundred feet of stone and dark and silence — a city he had not seen. He could feel, far below his feet, a layer of something that was not earth, an immense waiting weight that he would, in the months to come, learn was called the Ash. He could feel, in his small new chest, the second heartbeat of the Ledger itself, ticking softly against the first.
+
+He thought about the girl in the yellow raincoat.
+
+He thought: I did not finish. The Ledger says I did not finish. The Ledger has decided to hold the line open. So.
+
+He looked down at the open page of his own status. He looked at the unspent points: seven. He looked at the evolution tree, locked, twelve stages above him, the long ladder of what he was now apparently meant to become. He looked at the line that said Candidate Eight, and at the smaller line beneath it, which had appeared while he was not watching, and which read: Candidates remaining, eight. One will hold the Crown. The others will be unmade.
+
+He read it twice. He let it sit.
+
+Then Kael Veyne — who had, in life, been a man who refused on principle to play a game whose rules had not been explained to him — leaned forward, on the small folded legs of his small new body, with the cooling chest of a dead cultist beneath him for a chair, and the body of a murdered woman behind him for witness, and the soul-brand of a dead Demon Lord burning blue on the palm of a hand that had not been his that morning, and he began, at last, to read.
+
+He read carefully. He read the way he had once read insurance contracts. He read the way he had once read endgame manuals. He read with the small unfamiliar lungs of the small unfamiliar body taking shallow, steady, deliberate breaths.
+
+He read the Ledger.
+
+And the Ledger, very quietly, in the cold clean serif font of a thing that had been waiting nine hundred and four years to be read by exactly the right kind of mind — read him back.
+</script>
+
+<script id="chapter-2" type="text/plain">
+TITLE: Seven Men at a Table That Has Only One Chair
+
+The cultist's name was Aren Mosk.
+
+Kael learned this not because the kneeling man told him, and not because he asked. He learned it because the Ledger, after some seconds of consideration, decided that a debt could not be properly held against a creditor whose name was unknown to its holder, and added a single line of cold blue script to the bottom of the open page.
+
+[LEDGER]
+DEBTOR (1):  AREN MOSK.
+             journeyman sigilist.
+             age 26.   in arrears.
+[/LEDGER]
+
+Kael read the line. He filed the name. He did not say it aloud.
+
+He was, he understood with the slow clean clarity that the small new body gave him, in no danger from this man. Aren Mosk was kneeling on cold stone three feet from him, and Aren Mosk's hands were resting palms-up on his thighs in the manner of a man who has been taught, somewhere in his short adult life, that to show empty hands to a thing of the lower planes is the only courtesy that thing might honor. He was breathing through his mouth. He was not weeping yet, but the weeping was a thing that was coming; Kael could see it gathering in the set of the man's shoulders the way a storm gathers in the way a sky goes flat. He was, as a unit of physical danger, a non-entity. The Ledger had taken him apart and laid him out, and Kael had read the labels.
+
+The danger was elsewhere.
+
+Six cultists had run. The Ledger had not bothered to record their names, which meant — Kael was beginning to develop a theory about this — that the Ledger considered them not worth recording. That was either a thing of mercy on the Ledger's part, or a thing of contempt, and Kael did not yet know which. They had gone out through a low arch at the back of the chamber, an arch in which the torchlight failed in a way that suggested the corridor on the other side bent, twice, sharply. They had been running. They would not be running long. They would, somewhere, find a person to tell. The person they told would tell another person. The chain of telling would eventually arrive at the desk of someone who had the authority to send armed men down into the catacombs to find out what had gone wrong with the ritual, and how a binding had killed the lead sigilist instead of the bound thing.
+
+Kael, sitting on Aren Mosk's dead colleague, did the calculation.
+
+He had been awake in this body for somewhere between eight and twelve minutes. Six cultists had been running for perhaps four of those minutes. Catacombs of this sort would have, at minimum, two means of egress, of which one was likely a service tunnel up into a crypt or a wine cellar of some sort, and one was likely a longer ritual passage to a private chapel. The cultists had probably gone for the service tunnel, because terrified people went for the shortest known route.
+
+So: four minutes for them to surface. Some additional time, perhaps five to twenty minutes, before they reached a person of authority. Some additional time, perhaps thirty minutes to two hours, before that person believed them. Some additional time, perhaps another hour, before armed men were in the catacombs.
+
+Outside window: forty minutes, very tight. Inside window: three hours, comfortable. He would plan for the forty.
+
+He turned his attention from the kneeling man to the chamber.
+
+The chamber, when he made himself look at it properly, was perhaps thirty feet by twenty, low-ceilinged, vaulted, with the ritual circle taking up roughly a third of the floor. The walls were black basalt, dressed and fitted with the care of a stoneworker who had been paid in gold and threats. Sigils were carved into the four corners of the room and inlaid with a pale grey paste that Kael, after a moment's looking, decided he did not want to examine more closely. Three of the torches in their iron sconces still burned arterial red. One had gone out when the lead sigilist had fallen across the salt-line; another had gone out when the surviving cultists had stumbled out through the arch. The light that remained was uneven and crawling and made the corners of the room a place where the eye could not quite be trusted.
+
+Furniture, such as it was: a low stone slab at the back of the chamber, on which a great deal of dark wet had been spilled and was now drying. A wooden stand beside it, with implements arranged in a precise row. A second stand, taller, on which was set an open book bound in pale leather. A bowl of salt. A bowl of ash. A bowl of something darker. A folded robe on a low bench. A water-skin hanging from a peg in the wall.
+
+Items, Kael thought, in order of immediate utility: the water-skin, the robe, the book, the implements, and the bowls, only if he could carry them.
+
+He could not, with the small new body, carry the bowls. He could perhaps wear the robe, which would dwarf him but which would also, possibly, conceal him in a way that the small purple skin of the small new body would otherwise not be concealed. He could perhaps, with effort, drag the book. He did not yet know whether the book mattered.
+
+The water-skin. Always the water-skin first.
+
+He stood up — and it cost him more effort, this time, than it had the first time, which he marked. The body was failing in some small way. He looked down at himself again, properly this time. The skin of his small thin chest was the colour of a bruise, yes, but in the better light he could see that the bruise was not uniform. There were thin paler lines along the ribs, faint silver tracings, like watermarks pressed into damp paper. They were sigils. He had not noticed them in the dark. They were small and clean and they had been written into the flesh of this body by someone who had known what they were doing.
+
+The Ledger noticed his attention and obliged.
+
+[LEDGER]
+BODY-MARKINGS (passive, 7 visible):
+
+* WARD vs. BINDING          (broken - see kill 1)
+* WARD vs. EXSANGUINATION   (active, integrity 0.93)
+* WARD vs. COMPULSION       (active, integrity 1.00)
+* WARD vs. UNMAKING         (active, integrity 1.00)
+* CONTAINMENT-SEAL          (broken - see exit cultists)
+* SUMMONING-ANCHOR          (active - origin: this chamber)
+* OBEDIENCE-LATCH           (broken - see kill 1)
+[/LEDGER]
+
+Kael read the list twice. He read it slowly, the way he had once, on a long bored Sunday afternoon, read the fine print of his apartment's lease.
+
+The seven small sigils on his ribs were, he understood, the work of the lead sigilist — the man whose chest he was now perhaps a foot above, on his small folded legs. The sigilist had cut these wards into the body of the Imp before the summoning had completed. He had been careful. He had warded the body against being killed by exsanguination, because Imps could bleed to death easily. He had warded it against being compelled by another binder, because he had not wanted to share. He had warded it against being unmade, because he had not wanted the binding to dissolve back into the Ash if the ritual was interrupted. He had set a containment-seal in the body to keep the Imp inside the circle. He had anchored the summoning to the chamber itself. And he had attached an obedience-latch — a kind of soft collar, separate from the hard binding-collar that Kael had rerouted into him.
+
+Six of the seven wards remained.
+
+The two broken ones had broken at the same moment: when Kael, with what the Ledger had been pleased to call Lesser Reroute, had sent the binding-collar back up the chain and into the man who had been pushing it down at him. The Obedience-Latch had snapped because there was no longer anyone on the other end to hold it. The Containment-Seal had broken, he thought, because the ritual itself had failed; the salt-line had gone, the circle was open, and the seal had nothing left to clip to.
+
+The other five remained.
+
+This was, when Kael thought about it carefully, an extraordinary piece of luck. Or it was not luck. He did not yet know whether the Ledger arranged for things, or merely recorded them.
+
+The most interesting of the five, by a considerable margin, was the Summoning-Anchor. Origin, this chamber.
+
+Kael held that thought up and turned it over.
+
+If the anchor was here, then so long as he was here, he was — in some technical sense that he did not yet understand the shape of — held in place. Not bound, no. The binding was off. But anchored. Tethered. The sigilist had wanted to be very sure that the thing he was summoning would not, in the moment between forming and being collared, drift off into the back-rooms of reality and disappear. So he had pinned the summoning to the chamber's geometry. As long as the body stood in or near this chamber, the body was, in some weak way, of this chamber, the way a candle's flame is of the candle.
+
+If he left, the anchor would either come with him — unlikely, anchors of this kind were keyed to fixed coordinates — or it would tear.
+
+If it tore, things would happen. He did not yet know what things. He suspected he would not enjoy finding out.
+
+He looked back at the Ledger, narrowing his attention, and asked it, not in words but in the shape of the question, can I read the room?
+
+The Ledger obliged. A new line bloomed.
+
+[LEDGER]
+CHAMBER:           SUB-ALTAR III, HOUSE OF SEVEN ROOMS.
+LOCATION (rel.):   below the city of Tannev-on-the-Shoal.
+LOCATION (abs.):   unknown to you.
+
+HOUSE STATUS:      1 of 7 chambers compromised (this one).
+OTHER CHAMBERS:    6 (within this complex).
+
+EXITS (this room): 2
+  * arch (north): service tunnel, fled by cultists.
+  * hatch (floor, beneath altar slab):
+        ritual passage, not used in this rite.
+[/LEDGER]
+
+Kael breathed out, slowly, through the small wrong teeth of the small new body. He had asked an impossible question and the Ledger had simply answered it.
+
+He understood, with a thin and dawning excitement that he had not felt since the spring he had been seventeen and had first read a chess endgame manual that actually taught him something he had not known: that the Ledger was not a tutorial. The Ledger was a research tool. It was a librarian. He had been treating it as an intrusive interface, and it was not that at all. It was a creature — or the ghost of a creature — that had been waiting to be asked questions, and had answered, when he had asked the first one, with the patience of an institution that had been silent for nine hundred years.
+
+He filed the thought and addressed the practical problem.
+
+Two exits. The north arch was the one the cultists had fled through, and the cultists had been running toward people. Coming back the way they had run was the worst possible route. The hatch under the altar slab was the one Kael wanted.
+
+He looked at the kneeling cultist. "Aren Mosk," he said.
+
+He had not meant to say the name aloud. It came out anyway, and the chittering wrong voice he had used the first time now had — perhaps because he had used it once already, perhaps because his small new body was learning — a thread of human cadence running through it. The man on his knees in front of him jerked his head up as though he had been struck.
+
+"You — you know my —"
+
+"Be quiet," Kael said. The voice still chittered. Aren Mosk closed his mouth so quickly his teeth clicked.
+
+Kael considered him. "Stand up."
+
+The cultist stood up. He stood up very slowly, with the careful coordination of a man who has been told that the room he is in contains a tiger, and that the tiger is the size of a housecat, and that the tiger may also be made of laws he does not understand. He was tall — six feet at least — and thin, and his robe hung on him as if it had been made for someone else's shoulders. His hair was the colour of wet hay. His eyes, now that Kael could see them properly, were a flat washed-out grey that was almost no colour at all.
+
+"I am going to ask you questions," Kael said. "You are going to answer them. You will not answer them at length. You will not lie. The thing on your soul — the line in red between you and me — can hear what you say. It can hear what you would have said. It does not love you. Do you understand."
+
+Aren Mosk nodded. He had not been able to speak. He nodded.
+
+"Good. The hatch under the altar. Where does it go."
+
+The cultist's mouth worked. He said, in a voice that came out cracked: "The — the lower passage. Down. To the old reliquary. Two levels down."
+
+"Is the old reliquary occupied."
+
+"No."
+
+"Is it warded."
+
+A small hesitation. Aren Mosk looked at the floor, and then he looked at Kael, and then he looked at the floor again. "Yes. Against — against entrance from below. Not from above. We came down to it. Three weeks ago. To take a thing."
+
+"What thing."
+
+The hesitation, this time, was longer.
+
+"A bone," Aren Mosk said. "A bone of a saint. We needed it for. For tonight."
+
+Kael let the silence sit. "What was the ritual for," Kael said.
+
+"To. To call you."
+
+"Be specific."
+
+"To call one of the Eight."
+
+"You knew there were eight."
+
+A small surprise on the cultist's face. He had thought, perhaps, that this was a question he was being tested on. "The. The Brother. The Brother told us. He said the time was come. He said the dead Lord was making his succession and that we were chosen to bring forth a Candidate. He said — he said it had been nine hundred and four years."
+
+"Who is the Brother."
+
+"I — I don't know. He came hooded. He came in winter. He gave us the rites. He has not been here since the rites were settled."
+
+"How many of you."
+
+"Eight in the rite. The Brother said it must be eight. One for each Candidate, to. To make the ratio right."
+
+"And the woman."
+
+The cultist's face, which had been the bloodless colour of dough, achieved a new and worse pallor. "The. The vessel."
+
+"Her name, Aren Mosk."
+
+The man on his feet in the broken circle closed his eyes. "Mireille," he said. "Mireille Vasc."
+
+Kael, on his small folded legs, on the chest of the lead sigilist whose name the Ledger had not bothered to record, looked at the body of Mireille Vasc lying behind him in the salt and the ash, and he did the thing that he had decided, several minutes ago, that he was the sort of new creature who would do.
+
+He committed her name to the Ledger.
+
+He did not know how. He did not need to know how. He held the syllables in his attention the way a man holds a coin between thumb and finger, and he turned the attention toward the open page, and he set the syllables down.
+
+The Ledger received them. The Ledger, after a moment, added a line of its own.
+
+[LEDGER]
+DEBT NEW (held by you):
+
+  the body of MIREILLE VASC,
+  opened by AREN MOSK and seven others,
+  used to form the body you wear.
+
+  weight:  substantial.
+  the Ledger recommends collection
+  in full from the surviving seven.
+[/LEDGER]
+
+Kael read that line and something in the small new body — something that was not the body, that was older than the body, that had ridden across from his last apartment and his last stairwell and the wet eyes of a child whose name he did not know — went very still.
+
+He understood, in the stillness, two things. The first was that he had just been given an assignment. The Ledger was not neutral. The Ledger had opinions. He had filed that thought twelve minutes ago and now he had a second confirmation: the Ledger had looked at the situation of Mireille Vasc and it had decided, of its own initiative, that the debt would not be settled by Kael's mere knowing of her name. It had recommended a specific collection. From a specific number of people.
+
+The second was that he did not, yet, disagree with it.
+
+He set both thoughts down beside each other to be considered properly later. Now was not the time. He was a small new thing in a chamber with one hostile witness and a forty-minute outside window, and the time for moral reckoning was the time after the work, not the time during.
+
+He looked at Aren Mosk. "You will help me," Kael said.
+
+The cultist made a sound somewhere between a breath and a word.
+
+"You will help me in the following way. You will lift the slab. You will open the hatch. You will descend with me into the old reliquary. You will carry the water-skin. You will carry the book on the high stand. You will carry me, if I ask. You will answer my questions on the way. You will, when we reach the reliquary, sit down where I tell you to sit down. You will not speak unless spoken to. You will not run. You will not pray. You owe me a debt that I have not yet decided how to weigh; for the next several hours you will be paying interest on it with your hands and your back and your voice. Do you understand."
+
+The cultist understood. The cultist nodded.
+
+"Good."
+
+Kael unfolded his small thin legs. He climbed, carefully, off the chest of the dead sigilist — and the climbing was awkward, because the sigilist's robes were slippery with the wet from the salt-fire — and he stepped, for the first time, properly onto the stone floor of the chamber. The stone was very cold. The tail, which had been lying across his thigh, now dragged behind him on the floor, and the dragging was a sensation he had not yet decided how to feel about.
+
+He walked, a little unsteadily, the length of the broken circle.
+
+Aren Mosk, watching him walk, said — and the saying came out before the cultist could decide whether it was wise — "You're — you're not what we called for."
+
+Kael stopped.
+
+He turned his small head, slowly, the long way back over his small shoulder. "What did you call for."
+
+"An Imp," the cultist said. "We called for an Imp."
+
+"And what did you get."
+
+Aren Mosk swallowed. His thin throat worked under the cord of his robe. "I don't know," he said. "I don't know. I don't know."
+
+Kael considered him. He could, he thought, feel the Ledger waiting — the small attentive ticking of it behind his eye, listening for what he would do with this.
+
+He turned, with deliberate care, back toward the altar slab. He said, over his shoulder, without looking at the cultist: "You got an Imp. The Imp can read."
+
+He walked toward the altar.
+
+Behind him, after a long moment, he heard Aren Mosk begin, very quietly, to weep.
+
+Kael did not turn around. He was thirty-one years old, in a body four days younger than its first kill, and he was learning a great many things very quickly, but he had learned one of them in his old life and he was not going to unlearn it now. It was this: that there were two kinds of people in a room with a weeping man. The kind that turned around, and the kind that finished what they had come to do. He had spent his whole adult life as the second kind, and on certain Tuesday nights in his old apartment, lying in the dark, he had not been proud of it. He had thought, on those nights, that perhaps if he were given a different life he would try to be the first kind. He had been given a different life. He still walked to the altar.
+
+When he reached the dais, the steps were the wrong scale for the small new body — each was nearly as tall as he was — and he had, undignified and methodical, to climb them like a child on a staircase, one careful clamber at a time.
+
+He reached the top of the dais.
+
+The book was bigger than he had estimated from across the room, and it sat on its stand at a height that placed its open pages exactly at the level of his small purple face. The pages were vellum. The script was in a hand he had never seen, but which he understood, in the same way he had understood the chant — not by language but by the leaning of the Ledger toward the meaning.
+
+He read what was written on the left-hand page. It was the rite that had made him.
+
+He read what was written on the right-hand page. It was a list of seven names.
+
+The names were not the names of the cultists, who had been seven plus Aren Mosk and the lead sigilist whom the Ledger had not deigned to record. The names were not the name of Mireille Vasc. The names were not, when he made himself read them, in any language at all — they were a series of seven sigils, each different, each annotated in the margins with a small slanting note in a second hand.
+
+The Ledger, very quietly, behind his eye, identified them for him.
+
+[LEDGER]
+CANDIDATES, AS KNOWN TO THE BROTHER:
+
+1. THE HOLLOW PRINCE
+     Reaver, ascending fast.
+2. THE BEETLE-SAINT
+     hive, parasitic, sainted host.
+3. THE CHILD WHO EATS MEMORIES
+     Half-Form, juvenile.
+4. THE LADY IN THE COURT
+     long-incubated, noble host.
+5. THE ASCETIC
+     refuses evolution, stable at Stage 4.
+6. THE GODDESS-CLAIMANT
+     insane, dangerous.
+7. THE UNKNOWN
+     sigil here is wrong.  the Brother
+     does not know who 7 is, and has been
+     lying about it.
+[/LEDGER]
+
+Kael stood on the top step of the dais, eighteen inches of bruised plum-coloured skin and one slow-flicking tail, and looked at the line that said the Brother does not know who 7 is, and has been lying about it, and he felt, for the second time since he had woken in this chamber, the small clean cold feeling of a board state he could read.
+
+There were eight Candidates. He was the eighth. Six were named on this page. One was hidden, even from the man who had presumed to summon him. That was a thing of interest. That was a thing of profound interest.
+
+He thought: Whoever the Brother is, he does not have the full set. He does not know who Candidate Seven is. He thinks he knows. He has written a sigil there, but the Ledger says the sigil is wrong, which means he has been deceived, or he is deceiving someone, or both. He believed, when he prepared this rite, that he was bringing forth Candidate Eight under controlled conditions. He believed he could bind Eight. He sent eight men to do it. He gave them a saint's bone and a vessel and a book. Either the Brother is a careful man with a blind spot, or the Brother is a man pretending to have a plan he does not have. In either case, I have the book and he does not know I have it.
+
+He looked, again, at the page. The notes in the margin were in a second hand. He had registered this the first time, and not understood the significance. He understood it now.
+
+Two people had written in this book. One was the Brother. One was someone else. Someone who had been close enough to the book to annotate it, and who had — in the small slanting notes — written things like not confirmed and check against the Thal-Veren registry and, in one place, in a hand that was beginning to tremble at the end of the sentence, if seven is who I think seven is then we have all been used.
+
+Kael read that note three times. He committed it to the Ledger.
+
+[LEDGER]
+NEW DEBT (held by you):
+
+  one warning, written in a hand
+  not yet known to you, that another
+  party was used by the Brother.
+
+  weight:  indeterminate, but not zero.
+  the Ledger will hold this line open.
+  you will find this person.
+[/LEDGER]
+
+He turned around.
+
+Aren Mosk was still weeping, quietly, in the middle of the broken circle, with his hands held out at his sides as though he had forgotten he could put them down. He had not moved. He was holding very still the way a man holds still in a forest, when he has heard something move in the brush behind him and is trying, by sheer force of stillness, not to be the one the thing eats.
+
+"Aren Mosk," Kael said.
+
+The cultist lifted his face. It was wet.
+
+"The slab. Open it."
+
+Aren Mosk closed his eyes for a moment. Then he opened them again, and he wiped his face with the heel of his hand, and he walked, on legs that he was barely keeping under him, to the altar slab. He set his shoulder against it. He pushed.
+
+The slab grated. Stone on stone. The grinding was loud enough that Kael, for a moment, forgot to track his outside window, and had to make himself reach mentally for it again. Forty minutes. The grating sound would, he understood, carry. The catacombs were stone. Stone carried.
+
+[LEDGER]
+ESTIMATED INTRUSION (armed):
+  38 minutes
+  (revised; the grating is audible up two levels.)
+[/LEDGER]
+
+"Faster," Kael said.
+
+Aren Mosk pushed faster.
+
+The slab moved. It moved by inches, and then by feet, and at last by enough — the cultist was a tall thin man, and weak, and not built for this work, and his hands were beginning to bleed on the stone — that a black squared opening showed in the floor of the dais. A breath of cold air came up out of it. The air smelled, Kael noted with a small clean interest, of nothing. Not of mould. Not of stone. Not of damp. Of nothing. Which was, in catacombs, an extremely uncommon smell.
+
+Aren Mosk straightened up. His hands were bloody. He looked, for the first time, at Kael not with terror but with a kind of dull exhausted question, as though he had run out of the energy required for fear and had nothing left but procedure. "Now what," he said.
+
+Kael walked to the edge of the opening. He looked down.
+
+The Ledger, behind his eye, offered no comment on what was below. This was new. The Ledger had, for the last twenty-something minutes, had a comment on everything. It had named men. It had named bones. It had named the chamber and counted the exits and rated the integrity of his wards to two decimal places. It had nothing to say about what was at the bottom of this hatch.
+
+Kael read that silence with the attention it deserved.
+
+"Now," he said, to Aren Mosk and to himself and to whatever was listening, "we go down."
+
+He stepped, very deliberately, off the edge.
+
+His tail caught him. He had not known, until that moment, that his tail could catch him. It coiled around the upper rim of the opening as he fell, took his weight, and lowered him — slowly, with what felt very much like the tail's own opinion about the proper rate of descent — into the dark.
+
+Behind him, Aren Mosk made a small bewildered sound that was almost a laugh, and picked up the water-skin and the book, and began, on bloody hands and bad knees, to follow.
+
+Kael Veyne, Candidate the Eighth, Imp of the Eighth Ash, with seven sigils on his ribs and four debts on the Ledger and one Brother somewhere in a city he had not yet seen the sky of, descended.
+
+The Ledger went with him.
+
+It said nothing.
+
+It was, he understood, listening.
+</script>
+
+<script>
+(() => {
+  'use strict';
+
+  const CHAPTERS = [
+    { id: 1, label: 'I',  scriptId: 'chapter-1' },
+    { id: 2, label: 'II', scriptId: 'chapter-2' },
+  ];
+
+  const VOICES = [
+    { group: 'Chirp 3 HD — male',   name: 'en-US-Chirp3-HD-Charon',   label: 'Charon — deep, measured', lang: 'en-US' },
+    { group: 'Chirp 3 HD — male',   name: 'en-US-Chirp3-HD-Fenrir',   label: 'Fenrir — warm, narrator', lang: 'en-US' },
+    { group: 'Chirp 3 HD — male',   name: 'en-US-Chirp3-HD-Orus',     label: 'Orus — bright, conversational', lang: 'en-US' },
+    { group: 'Chirp 3 HD — male',   name: 'en-US-Chirp3-HD-Puck',     label: 'Puck — youthful, expressive', lang: 'en-US' },
+    { group: 'Chirp 3 HD — female', name: 'en-US-Chirp3-HD-Aoede',    label: 'Aoede — smooth, literary', lang: 'en-US' },
+    { group: 'Chirp 3 HD — female', name: 'en-US-Chirp3-HD-Kore',     label: 'Kore — calm, clear', lang: 'en-US' },
+    { group: 'Chirp 3 HD — female', name: 'en-US-Chirp3-HD-Leda',     label: 'Leda — soft, intimate', lang: 'en-US' },
+    { group: 'Chirp 3 HD — female', name: 'en-US-Chirp3-HD-Zephyr',   label: 'Zephyr — confident, brisk', lang: 'en-US' },
+    { group: 'Chirp 3 HD — UK',     name: 'en-GB-Chirp3-HD-Charon',   label: 'Charon UK — deep, measured', lang: 'en-GB' },
+    { group: 'Chirp 3 HD — UK',     name: 'en-GB-Chirp3-HD-Aoede',    label: 'Aoede UK — smooth, literary', lang: 'en-GB' },
+    { group: 'Neural2',             name: 'en-US-Neural2-D',          label: 'Neural2 D — male, deep', lang: 'en-US' },
+    { group: 'Neural2',             name: 'en-US-Neural2-J',          label: 'Neural2 J — male, bright', lang: 'en-US' },
+    { group: 'Neural2',             name: 'en-US-Neural2-F',          label: 'Neural2 F — female, warm', lang: 'en-US' },
+    { group: 'Neural2',             name: 'en-GB-Neural2-B',          label: 'Neural2 B UK — male', lang: 'en-GB' },
+    { group: 'WaveNet (cheaper)',   name: 'en-US-Wavenet-D',          label: 'WaveNet D — male, deep', lang: 'en-US' },
+    { group: 'WaveNet (cheaper)',   name: 'en-US-Wavenet-J',          label: 'WaveNet J — male, bright', lang: 'en-US' },
+    { group: 'WaveNet (cheaper)',   name: 'en-GB-Wavenet-B',          label: 'WaveNet B UK — male', lang: 'en-GB' },
+  ];
+  const DEFAULT_VOICE = 'en-US-Chirp3-HD-Fenrir';
+  const MAX_CHUNK_BYTES = 4500;
+
+  const $ = (id) => document.getElementById(id);
+  const escHTML = (s) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const romanize = (n) => { const map=[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let s=''; for(const [v,r] of map){ while(n>=v){s+=r;n-=v;} } return s; };
+  const fmtTime = (sec) => {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec/60), s = Math.floor(sec%60);
+    return m + ':' + (s<10?'0':'') + s;
+  };
+  const fmtBytes = (n) => {
+    if (n < 1024) return n + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/(1024*1024)).toFixed(1) + ' MB';
+  };
+
+  const SS_KEY = 'hcv_state_v2';
+  const state = Object.assign({
+    chapter: 1, rate: 1.0, apiKey: '',
+    voice: DEFAULT_VOICE, audioPos: {},
+  }, JSON.parse(localStorage.getItem(SS_KEY) || '{}'));
+  const save = () => { try { localStorage.setItem(SS_KEY, JSON.stringify(state)); } catch(e){} };
+
+  // ---- IndexedDB ----
+  const DB_NAME = 'hcv_audio', STORE = 'chapters';
+  const openDB = () => new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); };
+    req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+  });
+  const dbGet = async (k) => {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      try {
+        const tx = db.transaction(STORE, 'readonly');
+        tx.onerror = () => rej(tx.error || new Error('dbGet tx error'));
+        tx.onabort = () => rej(tx.error || new Error('dbGet tx abort'));
+        const r = tx.objectStore(STORE).get(k);
+        r.onsuccess = () => res(r.result || null);
+        r.onerror = () => rej(r.error || new Error('dbGet request error'));
+      } catch (e) { rej(e); }
+    });
+  };
+  const dbPut = async (k, v) => {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      try {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.onerror = () => rej(tx.error || new Error('dbPut tx error'));
+        tx.onabort = () => rej(tx.error || new Error('dbPut tx abort'));
+        tx.oncomplete = () => res();
+        const r = tx.objectStore(STORE).put(v, k);
+        r.onerror = () => rej(r.error || new Error('dbPut request error'));
+      } catch (e) { rej(e); }
+    });
+  };
+  const dbList = async () => {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      try {
+        const tx = db.transaction(STORE, 'readonly');
+        const items = [];
+        tx.onerror = () => rej(tx.error || new Error('dbList tx error'));
+        tx.onabort = () => rej(tx.error || new Error('dbList tx abort'));
+        tx.objectStore(STORE).openCursor().onsuccess = (e) => {
+          const c = e.target.result;
+          if (c) { items.push({key: c.key, value: c.value}); c.continue(); }
+          else res(items);
+        };
+      } catch (e) { rej(e); }
+    });
+  };
+  const dbClear = async () => {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+      try {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.onerror = () => rej(tx.error || new Error('dbClear tx error'));
+        tx.onabort = () => rej(tx.error || new Error('dbClear tx abort'));
+        tx.oncomplete = () => res();
+        tx.objectStore(STORE).clear();
+      } catch (e) { rej(e); }
+    });
+  };
+
+  const cacheKey = (chapterId, voice) => `ch${chapterId}__${voice}`;
+
+  // ---- text parsing ----
+  const ABBREV = /\b(?:Mr|Mrs|Ms|Dr|St|Sr|Jr|vs|etc|e\.g|i\.e|Mt|No|Vol|Ch)\.$/i;
+  function splitSentences(text) {
+    const out = []; let buf = '';
+    const chars = Array.from(text);
+    for (let i=0;i<chars.length;i++) {
+      const c = chars[i]; buf += c;
+      if (c === '.' || c === '!' || c === '?') {
+        while (i+1 < chars.length && /["'’”\)\]\}\.!\?…—–\-]/.test(chars[i+1])) { buf += chars[i+1]; i++; }
+        const nxt = chars[i+1];
+        if ((nxt === undefined || /\s/.test(nxt)) && !ABBREV.test(buf.trim())) {
+          out.push(buf.trim()); buf = '';
+          while (i+1 < chars.length && /\s/.test(chars[i+1])) i++;
+        }
+      }
+    }
+    const tail = buf.trim(); if (tail) out.push(tail);
+    return out;
+  }
+
+  function loadChapterRaw(chapterId) {
+    const cfg = CHAPTERS.find(c => c.id === chapterId);
+    const raw = $(cfg.scriptId).textContent.trim();
+    let title = `Chapter ${chapterId}`; let body = raw;
+    const m = raw.match(/^TITLE:\s*(.+)\s*\n/);
+    if (m) { title = m[1].trim(); body = raw.slice(m[0].length).trim(); }
+    return { title, body };
+  }
+
+  function parseBlocks(body) {
+    const blocks = []; const parts = body.split(/\n{2,}/);
+    let inLedger = false; let buf = [];
+    for (const p of parts) {
+      const t = p.trim(); if (!t) continue;
+      if (!inLedger) {
+        if (t.startsWith('[LEDGER]')) {
+          inLedger = true;
+          const rest = t.replace(/^\[LEDGER\]\s*/, '');
+          if (rest.includes('[/LEDGER]')) {
+            const inner = rest.replace(/\s*\[\/LEDGER\]\s*$/, '');
+            blocks.push({ kind: 'ledger', text: inner });
+            inLedger = false;
+          } else { buf = [rest]; }
+        } else blocks.push({ kind: 'p', text: t });
+      } else {
+        if (t.includes('[/LEDGER]')) {
+          const last = t.replace(/\s*\[\/LEDGER\]\s*$/, '');
+          if (last) buf.push(last);
+          blocks.push({ kind: 'ledger', text: buf.join('\n\n') });
+          inLedger = false; buf = [];
+        } else buf.push(t);
+      }
+    }
+    return blocks;
+  }
+
+  function buildTTSText(blocks) {
+    const lines = [];
+    for (const b of blocks) {
+      if (b.kind === 'p') lines.push(b.text);
+      else {
+        let t = b.text.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+        lines.push('The ledger reads. ' + t);
+      }
+    }
+    return lines.join('\n\n');
+  }
+
+  function chunkForTTS(text) {
+    const sentences = splitSentences(text);
+    const chunks = []; let cur = '';
+    const enc = new TextEncoder();
+    const flush = () => { if (cur.trim()) { chunks.push(cur.trim()); cur = ''; } };
+    for (const s of sentences) {
+      const tentative = cur ? (cur + ' ' + s) : s;
+      if (enc.encode(tentative).length > MAX_CHUNK_BYTES) {
+        flush();
+        if (enc.encode(s).length > MAX_CHUNK_BYTES) {
+          const words = s.split(' '); let w = '';
+          for (const word of words) {
+            const t2 = w ? (w + ' ' + word) : word;
+            if (enc.encode(t2).length > MAX_CHUNK_BYTES) { if (w) chunks.push(w); w = word; }
+            else w = t2;
+          }
+          if (w) chunks.push(w);
+        } else cur = s;
+      } else cur = tentative;
+    }
+    flush();
+    return chunks;
+  }
+
+  // ---- render chapter ----
+  let sentences = [];
+  let totalChars = 0;
+  let curSentence = 0;
+
+  function renderChapter(chapterId) {
+    const { title, body } = loadChapterRaw(chapterId);
+    const blocks = parseBlocks(body);
+    const host = $('chapter-host');
+    let html = '';
+    html += `<div class="chapter-eyebrow">Chapter ${romanize(chapterId)}</div>`;
+    html += `<h2 class="chapter-title">${escHTML(title)}</h2>`;
+    html += `<div class="body-prose">`;
+
+    let sCounter = 0; let charCursor = 0; const sentenceEls = [];
+
+    const renderSentence = (text) => {
+      const id = sCounter++;
+      const charStart = charCursor; const charLen = text.length;
+      charCursor += charLen + 1;
+      sentenceEls.push({ id, text, charStart, charLen });
+      return `<span class="s" data-s="${id}">${escHTML(text)}</span>`;
+    };
+
+    for (const b of blocks) {
+      if (b.kind === 'p') {
+        const parts = splitSentences(b.text);
+        html += `<p>` + parts.map(renderSentence).join(' ') + `</p>`;
+      } else {
+        const ledgerSpoken = 'The ledger reads. ' + b.text.replace(/\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+        const id = sCounter++;
+        const charStart = charCursor; const charLen = ledgerSpoken.length;
+        charCursor += charLen + 1;
+        sentenceEls.push({ id, text: ledgerSpoken, charStart, charLen });
+        html += `<div class="ledger s" data-s="${id}">${escHTML(b.text)}</div>`;
+      }
+    }
+    html += `<div class="endmark">— end of chapter ${romanize(chapterId).toLowerCase()} —</div>`;
+    html += `</div>`;
+    host.innerHTML = html;
+
+    sentences = sentenceEls.map(s => {
+      const el = host.querySelector(`[data-s="${s.id}"]`);
+      return Object.assign({}, s, { el });
+    });
+    totalChars = charCursor;
+  }
+
+  function setActive(idx, { scroll = true } = {}) {
+    if (idx < 0) idx = 0;
+    if (idx >= sentences.length) idx = sentences.length - 1;
+    curSentence = idx;
+    for (let i = 0; i < sentences.length; i++) {
+      sentences[i].el.classList.toggle('active', i === idx);
+      sentences[i].el.classList.toggle('spoken', i < idx);
+    }
+    if (scroll && sentences[idx]) {
+      const r = sentences[idx].el.getBoundingClientRect();
+      const inView = r.top > 100 && r.bottom < (window.innerHeight - 160);
+      if (!inView) sentences[idx].el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function sentenceFromAudioTime(t, duration) {
+    if (!duration || !sentences.length) return 0;
+    const frac = Math.max(0, Math.min(1, t / duration));
+    const charPos = frac * totalChars;
+    let lo = 0, hi = sentences.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (sentences[mid].charStart <= charPos) lo = mid; else hi = mid - 1;
+    }
+    return lo;
+  }
+  function audioTimeForSentence(idx, duration) {
+    if (!sentences[idx] || !duration || !totalChars) return 0;
+    return (sentences[idx].charStart / totalChars) * duration;
+  }
+
+  // ---- toast ----
+  let toastTimer = null;
+  function toast(msg, kind = '', ms = 2400) {
+    const el = $('toast');
+    el.className = 'toast show ' + kind; el.textContent = msg;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, ms);
+  }
+
+  // ---- Google TTS ----
+  async function synthesizeChunk(chunkText, voice, apiKey, signal) {
+    const lang = (VOICES.find(v => v.name === voice) || {}).lang || 'en-US';
+    // Note: we deliberately omit sampleRateHertz. Chirp 3 HD voices reject
+    // some explicit rates, and the API picks a sensible default per voice.
+    const body = {
+      input: { text: chunkText },
+      voice: { languageCode: lang, name: voice },
+      audioConfig: { audioEncoding: 'MP3' },
+    };
+    let r;
+    try {
+      r = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(apiKey), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal,
+      });
+    } catch (netErr) {
+      if (netErr.name === 'AbortError') throw netErr;
+      throw new Error('Network error reaching Google TTS: ' + (netErr.message || netErr) +
+        '. Check your connection and any browser extensions that block fetch (ad blockers, privacy tools).');
+    }
+    if (!r.ok) {
+      let detail = '';
+      let status = '';
+      try {
+        const j = await r.json();
+        detail = (j.error && j.error.message) || '';
+        status = (j.error && j.error.status) || '';
+      } catch(e){}
+      let msg = `Google TTS API returned ${r.status}`;
+      if (status) msg += ' (' + status + ')';
+      if (detail) msg += ': ' + detail;
+      if (r.status === 400 && /voice/i.test(detail)) {
+        msg += '\n\nThe selected voice may not be available in this region. Try a different voice in Settings.';
+      } else if (r.status === 403) {
+        msg += '\n\nLikely causes: (1) the Cloud Text-to-Speech API is not enabled for your project — enable it at console.cloud.google.com/apis/library/texttospeech.googleapis.com, (2) the API key has HTTP referrer restrictions that block this page, or (3) billing is not set up on the project.';
+      } else if (r.status === 401 || (r.status === 400 && /api key/i.test(detail))) {
+        msg += '\n\nThe API key is invalid or rejected. Double-check it in Settings.';
+      } else if (r.status === 429) {
+        msg += '\n\nQuota exceeded. Wait or upgrade your project quota.';
+      }
+      throw new Error(msg);
+    }
+    const j = await r.json();
+    if (!j.audioContent) throw new Error('TTS API returned no audioContent. Response: ' + JSON.stringify(j).slice(0, 300));
+    return base64ToBytes(j.audioContent);
+  }
+  function base64ToBytes(b64) {
+    const binary = atob(b64); const len = binary.length;
+    const out = new Uint8Array(len);
+    for (let i = 0; i < len; i++) out[i] = binary.charCodeAt(i);
+    return out;
+  }
+  function concatBytes(arrs) {
+    let total = 0; for (const a of arrs) total += a.byteLength;
+    const out = new Uint8Array(total); let off = 0;
+    for (const a of arrs) { out.set(a, off); off += a.byteLength; }
+    return out;
+  }
+
+  let dlBlobURL = null;
+  function showDownloadLink(blob, chapterId) {
+    if (dlBlobURL) URL.revokeObjectURL(dlBlobURL);
+    dlBlobURL = URL.createObjectURL(blob);
+    const link = $('dl-link');
+    link.href = dlBlobURL;
+    link.download = `HollowCrownOfVehl_Book1_Chapter${chapterId}_${state.voice}.mp3`;
+    $('download-area').style.display = '';
+  }
+  function hideDownloadLink() {
+    $('download-area').style.display = 'none';
+  }
+
+  function showGenError(msg) {
+    const el = $('gen-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = '';
+  }
+  function clearGenError() {
+    const el = $('gen-error');
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+  }
+
+  let genAbort = null;
+  async function generateForCurrentChapter() {
+    clearGenError();
+    if (!state.apiKey) {
+      toast('Add your Google Cloud API key first.', 'error');
+      $('settings').classList.add('open');
+      $('btn-settings').setAttribute('aria-expanded','true');
+      $('apikey').focus();
+      return;
+    }
+    const { body } = loadChapterRaw(state.chapter);
+    const blocks = parseBlocks(body);
+    const ttsText = buildTTSText(blocks);
+    const chunks = chunkForTTS(ttsText);
+
+    const btn = $('btn-generate'), lbl = $('gen-label');
+    const prog = $('gen-progress'), bar = prog.querySelector('div');
+    btn.disabled = true; prog.classList.add('show'); bar.style.width = '0%';
+    lbl.innerHTML = '<span class="spinner"></span>&nbsp; Generating';
+    setKeyStatus('working', 'Generating audio…');
+
+    genAbort = new AbortController();
+    const audios = [];
+    try {
+      for (let i = 0; i < chunks.length; i++) {
+        lbl.innerHTML = `<span class="spinner"></span>&nbsp; Generating ${i+1} / ${chunks.length}`;
+        const bytes = await synthesizeChunk(chunks[i], state.voice, state.apiKey, genAbort.signal);
+        audios.push(bytes);
+        bar.style.width = (((i+1)/chunks.length)*100).toFixed(1) + '%';
+      }
+      const all = concatBytes(audios);
+      const playBlob = new Blob([all], { type: 'audio/mpeg' });
+      if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
+      currentBlobURL = URL.createObjectURL(playBlob);
+      audio.src = currentBlobURL;
+      audio.playbackRate = state.rate;
+      $('audio-cta').style.display = 'none';
+      $('btn-play').disabled = false;
+
+      showDownloadLink(playBlob, state.chapter);
+
+      const buf = all.buffer.slice(all.byteOffset, all.byteOffset + all.byteLength);
+      const baseMeta = {
+        mimeType: 'audio/mpeg',
+        size: buf.byteLength,
+        chars: ttsText.length, voice: state.voice,
+        chapterId: state.chapter, generatedAt: Date.now(),
+      };
+
+      let cached = false;
+      let cacheErr = null;
+
+      try {
+        await dbPut(cacheKey(state.chapter, state.voice),
+          Object.assign({ audioBuffer: buf }, baseMeta));
+        cached = true;
+      } catch (e1) {
+        cacheErr = e1;
+        console.warn('IndexedDB ArrayBuffer write failed:', e1);
+      }
+
+      if (!cached) {
+        try {
+          let bin = '';
+          const view = new Uint8Array(buf);
+          const CHUNK = 0x8000;
+          for (let i = 0; i < view.length; i += CHUNK) {
+            bin += String.fromCharCode.apply(null, view.subarray(i, i + CHUNK));
+          }
+          const b64 = btoa(bin);
+          await dbPut(cacheKey(state.chapter, state.voice),
+            Object.assign({ audioB64: b64 }, baseMeta));
+          cached = true;
+        } catch (e2) {
+          cacheErr = e2;
+          console.warn('IndexedDB base64 write failed:', e2);
+        }
+      }
+
+      if (cached) {
+        toast(`Narration ready — ${chunks.length} chunk${chunks.length>1?'s':''}, ${fmtBytes(all.byteLength)} · cached`, 'good');
+        setKeyStatus('ready', 'API key OK · narration cached');
+      } else {
+        toast(`Narration ready, but couldn't cache: ${cacheErr && cacheErr.name || 'unknown'}. Use the Download button to save the MP3.`, 'error', 6000);
+        setKeyStatus('error', `Cache failed: ${cacheErr && cacheErr.name || 'unknown'}`);
+      }
+      refreshCacheSummary();
+    } catch (err) {
+      if (err.name === 'AbortError') toast('Generation cancelled', '');
+      else {
+        console.error('TTS generation failed:', err);
+        const msg = String(err.message || err);
+        showGenError(msg);
+        toast('Generation failed — see error details above', 'error', 4500);
+        setKeyStatus('error', msg.split('\n')[0].slice(0, 80));
+      }
+    } finally {
+      btn.disabled = false; prog.classList.remove('show'); bar.style.width = '0%';
+      lbl.textContent = 'Generate narration'; genAbort = null;
+    }
+  }
+
+  // ---- audio player ----
+  const audio = $('audio');
+  let currentBlobURL = null;
+
+  async function loadAudioForChapter() {
+    if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
+    audio.removeAttribute('src'); audio.load();
+    $('btn-play').disabled = true;
+    $('timecode').textContent = '--:-- / --:--';
+    $('progress').style.setProperty('--p', '0%');
+    hideDownloadLink();
+
+    let entry = null;
+    try {
+      entry = await dbGet(cacheKey(state.chapter, state.voice));
+    } catch (e) { console.warn('dbGet failed:', e); }
+    let usedVoice = state.voice;
+    if (!entry) {
+      try {
+        const all = await dbList();
+        const candidates = all.filter(x => x.value && x.value.chapterId === state.chapter);
+        if (candidates.length) {
+          candidates.sort((a,b) => (b.value.generatedAt||0) - (a.value.generatedAt||0));
+          entry = candidates[0].value; usedVoice = entry.voice;
+        }
+      } catch (e) { console.warn('dbList failed:', e); }
+    }
+
+    const cta = $('audio-cta');
+    let playableBlob = null;
+    if (entry) {
+      const mime = entry.mimeType || 'audio/mpeg';
+      if (entry.audioBuffer) {
+        playableBlob = new Blob([entry.audioBuffer], { type: mime });
+      } else if (entry.audioB64) {
+        const bin = atob(entry.audioB64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        playableBlob = new Blob([bytes], { type: mime });
+      } else if (entry.blob) {
+        playableBlob = entry.blob;
+      }
+    }
+    if (playableBlob) {
+      currentBlobURL = URL.createObjectURL(playableBlob);
+      audio.src = currentBlobURL;
+      audio.playbackRate = state.rate;
+      cta.style.display = 'none';
+      $('btn-play').disabled = false;
+      const k = cacheKey(state.chapter, usedVoice);
+      const pos = state.audioPos[k] || 0;
+      audio.addEventListener('loadedmetadata', () => {
+        if (pos > 0 && pos < (audio.duration - 2)) audio.currentTime = pos;
+        updateTimecode();
+        setActive(sentenceFromAudioTime(audio.currentTime, audio.duration), { scroll: false });
+      }, { once: true });
+    } else {
+      cta.style.display = '';
+      $('cta-msg').textContent = state.apiKey
+        ? 'Tap "Generate narration" to convert this chapter into a high-quality audiobook using ' + (VOICES.find(v=>v.name===state.voice)?.label || state.voice) + '.'
+        : 'Open settings and paste your Google Cloud TTS API key to generate studio-quality narration for this chapter.';
+    }
+  }
+
+  function updateTimecode() {
+    const t = audio.currentTime || 0, d = audio.duration || 0;
+    $('timecode').textContent = fmtTime(t) + ' / ' + fmtTime(d);
+    $('progress').style.setProperty('--p', d ? ((t/d)*100).toFixed(2) + '%' : '0%');
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    updateTimecode();
+    if (!audio.duration) return;
+    const idx = sentenceFromAudioTime(audio.currentTime, audio.duration);
+    if (idx !== curSentence) setActive(idx, { scroll: true });
+    state.audioPos[cacheKey(state.chapter, state.voice)] = audio.currentTime;
+    save();
+  });
+  audio.addEventListener('play',  () => { $('icon-play').style.display='none'; $('icon-pause').style.display=''; });
+  audio.addEventListener('pause', () => { $('icon-play').style.display='';     $('icon-pause').style.display='none'; });
+  audio.addEventListener('ended', () => { $('icon-play').style.display='';     $('icon-pause').style.display='none'; });
+
+  // ---- UI ----
+  function buildVoiceSelect() {
+    const sel = $('voice'); sel.innerHTML = '';
+    const groups = {};
+    for (const v of VOICES) (groups[v.group] = groups[v.group] || []).push(v);
+    for (const g of Object.keys(groups)) {
+      const og = document.createElement('optgroup'); og.label = g;
+      for (const v of groups[g]) {
+        const o = document.createElement('option'); o.value = v.name; o.textContent = v.label; og.appendChild(o);
+      }
+      sel.appendChild(og);
+    }
+    sel.value = state.voice || DEFAULT_VOICE;
+  }
+
+  function setKeyStatus(kind, text) {
+    const el = $('key-status'); el.className = 'status-pill ' + kind;
+    el.querySelector('.text').textContent = text;
+  }
+
+  async function refreshCacheSummary() {
+    try {
+      const items = await dbList();
+      if (!items.length) { $('cache-summary').textContent = 'no cached audio'; }
+      else {
+        let total = 0;
+        for (const it of items) {
+          const v = it.value || {};
+          total += v.size
+            || (v.audioBuffer && v.audioBuffer.byteLength)
+            || (v.audioB64 && Math.floor(v.audioB64.length * 0.75))
+            || (v.blob && v.blob.size)
+            || 0;
+        }
+        $('cache-summary').textContent = `${items.length} cached chapter${items.length>1?'s':''} · ${fmtBytes(total)}`;
+      }
+      for (const c of CHAPTERS) {
+        const has = items.some(x => x.value.chapterId === c.id);
+        const chip = document.querySelector(`.chip[data-cid="${c.id}"]`);
+        if (chip) {
+          const b = chip.querySelector('.badge'); if (b) b.remove();
+          if (has) { const bd = document.createElement('span'); bd.className = 'badge'; bd.textContent = '♪'; chip.appendChild(bd); }
+        }
+      }
+    } catch(e) { $('cache-summary').textContent = 'cache unavailable'; }
+  }
+
+  function buildChapterChips() {
+    const bar = $('chapters'); bar.innerHTML = '';
+    for (const c of CHAPTERS) {
+      const b = document.createElement('button');
+      b.className = 'chip' + (c.id === state.chapter ? ' active' : '');
+      b.dataset.cid = c.id;
+      b.innerHTML = `Chapter ${c.label}`;
+      b.addEventListener('click', async () => {
+        if (c.id === state.chapter) return;
+        audio.pause();
+        state.chapter = c.id; save();
+        buildChapterChips();
+        renderChapter(c.id);
+        await loadAudioForChapter();
+        refreshCacheSummary();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      bar.appendChild(b);
+    }
+    refreshCacheSummary();
+  }
+
+  $('btn-settings').addEventListener('click', () => {
+    const open = $('settings').classList.toggle('open');
+    $('btn-settings').setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  $('btn-open-settings').addEventListener('click', () => {
+    $('settings').classList.add('open');
+    $('btn-settings').setAttribute('aria-expanded','true');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => $('apikey').focus(), 200);
+  });
+
+  $('btn-save-key').addEventListener('click', () => {
+    const k = $('apikey').value.trim();
+    if (!k) { toast('Key cannot be empty', 'error'); return; }
+    state.apiKey = k; save();
+    setKeyStatus('ready', 'API key saved');
+    toast('Key saved (stored only in this browser)', 'good');
+  });
+  $('apikey').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('btn-save-key').click(); } });
+
+  $('voice').addEventListener('change', async () => {
+    state.voice = $('voice').value; save();
+    await loadAudioForChapter();
+  });
+
+  $('rate').addEventListener('input', () => {
+    state.rate = parseFloat($('rate').value);
+    $('rateLabel').textContent = state.rate.toFixed(2) + '×';
+    const min = parseFloat($('rate').min), max = parseFloat($('rate').max);
+    $('rate').style.setProperty('--pct', (((state.rate-min)/(max-min))*100) + '%');
+    audio.playbackRate = state.rate; save();
+  });
+
+  $('btn-generate').addEventListener('click', () => { if (genAbort) genAbort.abort(); else generateForCurrentChapter(); });
+
+  $('btn-clear-cache').addEventListener('click', async () => {
+    if (!confirm('Delete all cached narration audio? You can regenerate it any time.')) return;
+    audio.pause();
+    if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
+    audio.removeAttribute('src'); audio.load();
+    await dbClear();
+    state.audioPos = {}; save();
+    refreshCacheSummary();
+    await loadAudioForChapter();
+    toast('Cache cleared', 'good');
+  });
+
+  $('btn-play').addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(e => toast(e.message, 'error'));
+    else audio.pause();
+  });
+  $('btn-fwd').addEventListener('click', () => { audio.currentTime = Math.min((audio.duration || 0), audio.currentTime + 10); });
+  $('btn-back').addEventListener('click', () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
+
+  $('chapter-host').addEventListener('click', (e) => {
+    const s = e.target.closest('.s'); if (!s) return;
+    const idx = parseInt(s.dataset.s, 10); if (Number.isNaN(idx)) return;
+    if (!audio.src) return;
+    audio.currentTime = audioTimeForSentence(idx, audio.duration);
+    setActive(idx, { scroll: false });
+    if (audio.paused) audio.play().catch(() => {});
+  });
+
+  $('progress').addEventListener('click', (e) => {
+    if (!audio.duration) return;
+    const r = $('progress').getBoundingClientRect();
+    const f = (e.clientX - r.left) / r.width;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, f * audio.duration));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); $('btn-play').click(); }
+    else if (e.code === 'ArrowRight') $('btn-fwd').click();
+    else if (e.code === 'ArrowLeft')  $('btn-back').click();
+  });
+
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    if ($('settings').classList.contains('open')) { lastY = window.scrollY; return; }
+    const y = window.scrollY;
+    if (y > lastY + 6 && y > 80) $('topbar').classList.add('hidden');
+    else if (y < lastY - 6) $('topbar').classList.remove('hidden');
+    lastY = y;
+  }, { passive: true });
+
+  if ('mediaSession' in navigator) {
+    const setTrackMeta = () => {
+      const cfg = CHAPTERS.find(c => c.id === state.chapter);
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: `Chapter ${cfg.label}`,
+        artist: 'The Hollow Crown of Vehl · Book I',
+        album: 'The Eighth Ash',
+      });
+    };
+    setTrackMeta();
+    navigator.mediaSession.setActionHandler('play',         () => audio.play().catch(()=>{}));
+    navigator.mediaSession.setActionHandler('pause',        () => audio.pause());
+    navigator.mediaSession.setActionHandler('seekbackward', () => $('btn-back').click());
+    navigator.mediaSession.setActionHandler('seekforward',  () => $('btn-fwd').click());
+    audio.addEventListener('loadedmetadata', setTrackMeta);
+  }
+
+  (async function init() {
+    buildVoiceSelect();
+    buildChapterChips();
+    renderChapter(state.chapter);
+
+    $('apikey').value = state.apiKey || '';
+    if (state.apiKey) setKeyStatus('ready', 'API key saved'); else setKeyStatus('', 'no key set');
+
+    $('rate').value = state.rate;
+    $('rateLabel').textContent = state.rate.toFixed(2) + '×';
+    const min = parseFloat($('rate').min), max = parseFloat($('rate').max);
+    $('rate').style.setProperty('--pct', (((state.rate-min)/(max-min))*100) + '%');
+
+    await loadAudioForChapter();
+    await refreshCacheSummary();
+  })();
+})();
+</script>
+
+</body>
+</html>
