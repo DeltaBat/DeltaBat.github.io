@@ -26,7 +26,8 @@ def process(text):
     title = "Untitled"
     body_start = 0
     for i, line in enumerate(lines):
-        m = re.match(r'^\s*CHAPTER\s+([IVXLCDM]+)\s*$', line)
+        # Accept "CHAPTER III", "Chapter III", "Chapter One", "Chapter 1"
+        m = re.match(r'^\s*Chapter\s+([IVXLCDM]+|[A-Za-z]+|\d+)\s*$', line, re.IGNORECASE)
         if m:
             # Title is on the next non-empty lines (might wrap across 1-3 lines)
             j = i + 1
