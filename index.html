@@ -180,6 +180,60 @@
   .ch-label .ch-prefix{ opacity:0.55; margin-right:5px; }
   .ch-btn svg{ width:16px; height:16px; }
 
+  .library-sheet{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(11,11,11,0.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    display:none; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:max(48px, env(safe-area-inset-top)) 24px 24px;
+    overflow-y:auto;
+  }
+  .library-sheet.open{ display:flex; }
+  .library-header{
+    width:100%; max-width:var(--max-read); display:flex; justify-content:space-between;
+    align-items:center; margin-bottom:32px;
+  }
+  .library-title{
+    font-family:"Optima","Avenir Next",sans-serif;
+    font-size:0.78rem; letter-spacing:0.4em; text-transform:uppercase;
+    color:var(--gold); margin:0;
+  }
+  .library-close{
+    background:transparent; border:1px solid var(--border); color:var(--ink);
+    border-radius:999px; padding:8px 16px; font:inherit; font-size:0.85rem;
+    cursor:pointer;
+  }
+  .library-close:hover{ border-color:var(--gold); color:var(--gold); }
+  .library-grid{
+    display:grid; gap:28px; width:100%; max-width:var(--max-read);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .book-card{
+    background:transparent; border:none; padding:0; cursor:pointer;
+    display:flex; flex-direction:column; gap:14px; text-align:left;
+    transition:transform 180ms ease;
+  }
+  .book-card:hover{ transform:translateY(-4px); }
+  .book-cover{
+    width:100%; aspect-ratio: 2 / 3; border-radius:8px; overflow:hidden;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(212,185,122,0.15);
+    background:#0b0b0b;
+  }
+  .book-cover svg{ width:100%; height:100%; display:block; }
+  .book-meta{ display:flex; flex-direction:column; gap:4px; }
+  .book-series{
+    font-family:"Optima","Avenir Next",sans-serif;
+    color:var(--ink); font-size:0.95rem; font-weight:700; letter-spacing:0.04em;
+  }
+  .book-sub{
+    color:var(--ink-dim); font-size:0.82rem; font-style:italic;
+  }
+  .book-stat{
+    color:var(--ink-dim); font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase;
+    margin-top:4px;
+  }
+  .book-card.active .book-cover{ box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 0 2px var(--gold); }
+  .book-card.active .book-series{ color:var(--gold); }
+
   .ch-picker{
     position:absolute; top:100%; right:0; margin-top:8px;
     background:var(--panel); border:1px solid var(--border);
@@ -422,6 +476,10 @@
       </button>
       <div class="ch-picker" id="ch-picker" role="menu"></div>
     </div>
+    <button class="control" id="btn-library" type="button" aria-label="Library">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M9 4v16M14 4l4 16M20 20H4"/></svg>
+      <span>Library</span>
+    </button>
     <button class="control" id="btn-settings" type="button" aria-expanded="false" aria-controls="settings">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span>Settings</span>
@@ -477,11 +535,6 @@
 </div>
 
 <main id="reader">
-  <div class="frontmatter">
-    <p class="title-display">The Hollow Crown<br>of Vehl</p>
-    <p class="subtitle-display">a series in ten books &middot; Book I, The Eighth Ash</p>
-  </div>
-
   <div class="audio-cta" id="audio-cta">
     <h3>Audiobook narration</h3>
     <p id="cta-msg">Open settings and paste your Google Cloud TTS API key to generate studio-quality narration for this chapter.</p>
@@ -528,6 +581,14 @@
 </div>
 
 <audio id="audio" preload="metadata"></audio>
+
+<div class="library-sheet" id="library-sheet" role="dialog" aria-modal="true" aria-label="Library">
+  <div class="library-header">
+    <h2 class="library-title">Library</h2>
+    <button class="library-close" id="btn-library-close" type="button">Close</button>
+  </div>
+  <div class="library-grid" id="library-grid"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -2811,14 +2872,37 @@ He would, after some thought, say a single word aloud to the empty room.
 (() => {
   'use strict';
 
-  const CHAPTERS = [
-    { id: 1, label: 'I',   scriptId: 'chapter-1' },
-    { id: 2, label: 'II',  scriptId: 'chapter-2' },
-    { id: 3, label: 'III', scriptId: 'chapter-3' },
-    { id: 4, label: 'IV',  scriptId: 'chapter-4' },
-    { id: 5, label: 'V',   scriptId: 'chapter-5' },
-    { id: 6, label: 'VI',  scriptId: 'chapter-6' },
+  const BOOKS = [
+    {
+      id: 'vehl',
+      seriesTitle: 'The Hollow Crown of Vehl',
+      bookLabel: 'Book I',
+      bookTitle: 'The Eighth Ash',
+      accent: '#d4b97a',
+      coverKind: 'crown',
+      chapters: [
+        { id: 1, label: 'I',   scriptId: 'chapter-1' },
+        { id: 2, label: 'II',  scriptId: 'chapter-2' },
+        { id: 3, label: 'III', scriptId: 'chapter-3' },
+        { id: 4, label: 'IV',  scriptId: 'chapter-4' },
+        { id: 5, label: 'V',   scriptId: 'chapter-5' },
+        { id: 6, label: 'VI',  scriptId: 'chapter-6' },
+      ],
+    },
+    {
+      id: 'wyrn',
+      seriesTitle: 'The Wyrn That Devoured Heaven',
+      bookLabel: 'Book I',
+      bookTitle: '',
+      accent: '#9bb4d6',
+      coverKind: 'wyrm',
+      chapters: [],
+    },
   ];
+
+  const getBook = (id) => BOOKS.find(b => b.id === id) || BOOKS[0];
+  const getCurrentBook = () => getBook(state.book);
+  const getChapters = () => getCurrentBook().chapters;
 
   const VOICES = [
     { group: 'Chirp 3 HD — male',   name: 'en-US-Chirp3-HD-Charon',   label: 'Charon — deep, measured', lang: 'en-US' },
@@ -2856,11 +2940,15 @@ He would, after some thought, say a single word aloud to the empty room.
     return (n/(1024*1024)).toFixed(1) + ' MB';
   };
 
-  const SS_KEY = 'hcv_state_v2';
+  const SS_KEY = 'hcv_state_v3';
+  let v2 = null;
+  try { v2 = JSON.parse(localStorage.getItem('hcv_state_v2') || 'null'); } catch(e){}
   const state = Object.assign({
-    chapter: 1, rate: 1.0, apiKey: '',
+    book: 'vehl', chapter: 1, rate: 1.0, apiKey: '',
     voice: DEFAULT_VOICE, audioPos: {},
-  }, JSON.parse(localStorage.getItem(SS_KEY) || '{}'));
+  }, v2 ? Object.assign({}, v2, { book: 'vehl' }) : {},
+     JSON.parse(localStorage.getItem(SS_KEY) || '{}'));
+  if (!getBook(state.book)) state.book = 'vehl';
   const save = () => { try { localStorage.setItem(SS_KEY, JSON.stringify(state)); } catch(e){} };
 
   // ---- IndexedDB ----
@@ -2925,7 +3013,30 @@ He would, after some thought, say a single word aloud to the empty room.
     });
   };
 
-  const cacheKey = (chapterId, voice) => `ch${chapterId}__${voice}`;
+  const cacheKey = (bookId, chapterId, voice) => `${bookId}__ch${chapterId}__${voice}`;
+  const oldCacheKey = (chapterId, voice) => `ch${chapterId}__${voice}`;
+
+  async function migrateOldCacheKeys() {
+    try {
+      const items = await dbList();
+      for (const it of items) {
+        if (typeof it.key !== 'string') continue;
+        if (it.key.startsWith('ch') && !it.key.includes('__ch')) {
+          const m = it.key.match(/^ch(\d+)__(.+)$/);
+          if (!m) continue;
+          const newKey = cacheKey('vehl', Number(m[1]), m[2]);
+          const v = it.value || {};
+          if (!v.bookId) v.bookId = 'vehl';
+          await dbPut(newKey, v);
+          try {
+            const db = await openDB();
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).delete(it.key);
+          } catch(e){}
+        }
+      }
+    } catch(e) { console.warn('cache migration failed:', e); }
+  }
 
   // ---- text parsing ----
   const ABBREV = /\b(?:Mr|Mrs|Ms|Dr|St|Sr|Jr|vs|etc|e\.g|i\.e|Mt|No|Vol|Ch)\.$/i;
@@ -2948,7 +3059,7 @@ He would, after some thought, say a single word aloud to the empty room.
   }
 
   function loadChapterRaw(chapterId) {
-    const cfg = CHAPTERS.find(c => c.id === chapterId);
+    const cfg = getChapters().find(c => c.id === chapterId);
     const raw = $(cfg.scriptId).textContent.trim();
     let title = `Chapter ${chapterId}`; let body = raw;
     const m = raw.match(/^TITLE:\s*(.+)\s*\n/);
@@ -3175,7 +3286,9 @@ He would, after some thought, say a single word aloud to the empty room.
     dlBlobURL = URL.createObjectURL(blob);
     const link = $('dl-link');
     link.href = dlBlobURL;
-    link.download = `HollowCrownOfVehl_Book1_Chapter${chapterId}_${state.voice}.mp3`;
+    const b = getCurrentBook();
+    const slug = (b.seriesTitle + ' ' + b.bookLabel).replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g,'');
+    link.download = `${slug}_Chapter${chapterId}_${state.voice}.mp3`;
     $('download-area').style.display = '';
   }
   function hideDownloadLink() {
@@ -3196,6 +3309,10 @@ He would, after some thought, say a single word aloud to the empty room.
   let genAbort = null;
   async function generateForCurrentChapter() {
     clearGenError();
+    if (!getChapters().find(c => c.id === state.chapter)) {
+      toast('No chapter to narrate in this book yet.', 'error');
+      return;
+    }
     if (!state.apiKey) {
       toast('Add your Google Cloud API key first.', 'error');
       $('settings').classList.add('open');
@@ -3239,14 +3356,14 @@ He would, after some thought, say a single word aloud to the empty room.
         mimeType: 'audio/mpeg',
         size: buf.byteLength,
         chars: ttsText.length, voice: state.voice,
-        chapterId: state.chapter, generatedAt: Date.now(),
+        bookId: state.book, chapterId: state.chapter, generatedAt: Date.now(),
       };
 
       let cached = false;
       let cacheErr = null;
 
       try {
-        await dbPut(cacheKey(state.chapter, state.voice),
+        await dbPut(cacheKey(state.book, state.chapter, state.voice),
           Object.assign({ audioBuffer: buf }, baseMeta));
         cached = true;
       } catch (e1) {
@@ -3263,7 +3380,7 @@ He would, after some thought, say a single word aloud to the empty room.
             bin += String.fromCharCode.apply(null, view.subarray(i, i + CHUNK));
           }
           const b64 = btoa(bin);
-          await dbPut(cacheKey(state.chapter, state.voice),
+          await dbPut(cacheKey(state.book, state.chapter, state.voice),
             Object.assign({ audioB64: b64 }, baseMeta));
           cached = true;
         } catch (e2) {
@@ -3307,15 +3424,23 @@ He would, after some thought, say a single word aloud to the empty room.
     $('progress').style.setProperty('--p', '0%');
     hideDownloadLink();
 
+    if (!getChapters().find(c => c.id === state.chapter)) {
+      $('audio-cta').style.display = 'none';
+      return;
+    }
+
     let entry = null;
     try {
-      entry = await dbGet(cacheKey(state.chapter, state.voice));
+      entry = await dbGet(cacheKey(state.book, state.chapter, state.voice));
+      if (!entry && state.book === 'vehl') {
+        entry = await dbGet(oldCacheKey(state.chapter, state.voice));
+      }
     } catch (e) { console.warn('dbGet failed:', e); }
     let usedVoice = state.voice;
     if (!entry) {
       try {
         const all = await dbList();
-        const candidates = all.filter(x => x.value && x.value.chapterId === state.chapter);
+        const candidates = all.filter(x => x.value && x.value.chapterId === state.chapter && (x.value.bookId || 'vehl') === state.book);
         if (candidates.length) {
           candidates.sort((a,b) => (b.value.generatedAt||0) - (a.value.generatedAt||0));
           entry = candidates[0].value; usedVoice = entry.voice;
@@ -3344,7 +3469,7 @@ He would, after some thought, say a single word aloud to the empty room.
       audio.playbackRate = state.rate;
       cta.style.display = 'none';
       $('btn-play').disabled = false;
-      const k = cacheKey(state.chapter, usedVoice);
+      const k = cacheKey(state.book, state.chapter, usedVoice);
       const pos = state.audioPos[k] || 0;
       audio.addEventListener('loadedmetadata', () => {
         if (pos > 0 && pos < (audio.duration - 2)) audio.currentTime = pos;
@@ -3370,7 +3495,7 @@ He would, after some thought, say a single word aloud to the empty room.
     if (!audio.duration) return;
     const idx = sentenceFromAudioTime(audio.currentTime, audio.duration);
     if (idx !== curSentence) setActive(idx, { scroll: true });
-    state.audioPos[cacheKey(state.chapter, state.voice)] = audio.currentTime;
+    state.audioPos[cacheKey(state.book, state.chapter, state.voice)] = audio.currentTime;
     save();
   });
   audio.addEventListener('play',  () => { $('icon-play').style.display='none'; $('icon-pause').style.display=''; });
@@ -3413,8 +3538,8 @@ He would, after some thought, say a single word aloud to the empty room.
         }
         $('cache-summary').textContent = `${items.length} cached chapter${items.length>1?'s':''} · ${fmtBytes(total)}`;
       }
-      for (const c of CHAPTERS) {
-        const has = items.some(x => x.value.chapterId === c.id);
+      for (const c of getChapters()) {
+        const has = items.some(x => x.value.chapterId === c.id && (x.value.bookId || 'vehl') === state.book);
         const chip = document.querySelector(`.chip[data-cid="${c.id}"]`);
         if (chip) {
           const b = chip.querySelector('.badge'); if (b) b.remove();
@@ -3426,7 +3551,7 @@ He would, after some thought, say a single word aloud to the empty room.
 
   async function gotoChapter(id) {
     if (id === state.chapter) return;
-    if (!CHAPTERS.find(c => c.id === id)) return;
+    if (!getChapters().find(c => c.id === id)) return;
     audio.pause();
     state.chapter = id; save();
     renderChapter(id);
@@ -3439,12 +3564,209 @@ He would, after some thought, say a single word aloud to the empty room.
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  async function gotoBook(bookId) {
+    const b = getBook(bookId);
+    if (!b) return;
+    audio.pause();
+    state.book = b.id;
+    state.chapter = b.chapters[0] ? b.chapters[0].id : 0;
+    save();
+    updateCrest();
+    if (b.chapters.length) {
+      renderChapter(state.chapter);
+    } else {
+      renderEmptyBook(b);
+    }
+    buildChapterChips();
+    updateChapterNav();
+    buildChapterPicker();
+    closeChapterPicker();
+    await loadAudioForChapter();
+    refreshCacheSummary();
+    closeLibrary();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateCrest() {
+    const b = getCurrentBook();
+    const crest = document.querySelector('.crest');
+    if (!crest) return;
+    crest.innerHTML = `${escHTML(b.seriesTitle)}<small>${escHTML(b.bookLabel)}${b.bookTitle ? ' &middot; ' + escHTML(b.bookTitle) : ''}</small>`;
+  }
+
+  function renderEmptyBook(b) {
+    const host = $('chapter-host');
+    host.innerHTML = `
+      <div class="chapter-eyebrow">${escHTML(b.bookLabel)}</div>
+      <h2 class="chapter-title">${escHTML(b.seriesTitle)}</h2>
+      <div class="body-prose">
+        <p style="color:var(--ink-dim); font-style:italic; text-align:center; margin-top:48px;">
+          No chapters yet. Upload chapter PDFs to <code>raw-chapters/</code> and they'll appear here.
+        </p>
+      </div>`;
+    sentences = []; totalChars = 0; curSentence = 0;
+    $('audio-cta').style.display = 'none';
+    $('btn-play').disabled = true;
+    hideDownloadLink();
+  }
+
+  function coverSVG(book) {
+    if (book.coverKind === 'wyrm') return coverWyrm(book);
+    return coverCrown(book);
+  }
+  function coverCrown(book) {
+    return `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1320"/>
+      <stop offset="55%" stop-color="#0f0a14"/>
+      <stop offset="100%" stop-color="#080608"/>
+    </linearGradient>
+    <radialGradient id="emberC" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0%" stop-color="rgba(212,185,122,0.35)"/>
+      <stop offset="60%" stop-color="rgba(212,185,122,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bgC)"/>
+  <rect width="400" height="600" fill="url(#emberC)"/>
+  <g fill="#d4b97a" opacity="0.5">
+    <circle cx="48" cy="120" r="1"/><circle cx="92" cy="180" r="0.7"/>
+    <circle cx="332" cy="92" r="0.9"/><circle cx="362" cy="160" r="0.6"/>
+    <circle cx="58" cy="450" r="0.8"/><circle cx="120" cy="510" r="0.6"/>
+    <circle cx="288" cy="478" r="1"/><circle cx="350" cy="528" r="0.7"/>
+    <circle cx="200" cy="40" r="0.6"/><circle cx="160" cy="58" r="0.4"/>
+  </g>
+  <g transform="translate(200,330)">
+    <path d="M -110 30 L -110 -10 L -82 -70 L -56 -22 L -28 -78 L 0 -10 L 28 -78 L 56 -22 L 82 -70 L 110 -10 L 110 30 Z"
+          fill="none" stroke="#d4b97a" stroke-width="2.2" stroke-linejoin="round" opacity="0.85"/>
+    <path d="M -110 12 L 110 12" stroke="#d4b97a" stroke-width="1.2" opacity="0.55"/>
+    <text x="0" y="6" text-anchor="middle"
+          font-family="Iowan Old Style, Palatino, Georgia, serif"
+          font-size="34" font-weight="700" fill="#d4b97a" opacity="0.6"
+          letter-spacing="3">VIII</text>
+  </g>
+  <rect x="22" y="22" width="356" height="556" fill="none" stroke="#d4b97a" stroke-width="0.7" opacity="0.35"/>
+  <g font-family="Iowan Old Style, Palatino, Georgia, serif" fill="#d4b97a" text-anchor="middle">
+    <text x="200" y="100" font-size="22" font-weight="700" letter-spacing="8" opacity="0.85">THE HOLLOW</text>
+    <text x="200" y="142" font-size="44" font-weight="700" letter-spacing="6">CROWN</text>
+    <text x="200" y="180" font-size="18" letter-spacing="6" opacity="0.7">OF VEHL</text>
+  </g>
+  <g font-family="Iowan Old Style, Palatino, Georgia, serif" text-anchor="middle">
+    <text x="200" y="510" font-size="11" fill="#a89a78" letter-spacing="6">BOOK I</text>
+    <text x="200" y="540" font-size="20" fill="#f5e9c8" font-style="italic">The Eighth Ash</text>
+    <line x1="120" y1="555" x2="280" y2="555" stroke="#d4b97a" stroke-width="0.6" opacity="0.6"/>
+  </g>
+</svg>`;
+  }
+  function coverWyrm(book) {
+    return `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0f1f"/>
+      <stop offset="55%" stop-color="#070a16"/>
+      <stop offset="100%" stop-color="#040508"/>
+    </linearGradient>
+    <radialGradient id="sunW" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(245,233,200,0.95)"/>
+      <stop offset="40%" stop-color="rgba(212,185,122,0.55)"/>
+      <stop offset="100%" stop-color="rgba(212,185,122,0)"/>
+    </radialGradient>
+    <radialGradient id="voidW" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(0,0,0,1)"/>
+      <stop offset="70%" stop-color="rgba(0,0,0,0.95)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bgW)"/>
+  <g fill="#c5d0e5">
+    <circle cx="58" cy="110" r="0.9" opacity="0.85"/><circle cx="92" cy="64" r="0.6" opacity="0.7"/>
+    <circle cx="138" cy="92" r="0.4" opacity="0.5"/><circle cx="312" cy="78" r="0.9" opacity="0.85"/>
+    <circle cx="348" cy="132" r="0.6" opacity="0.6"/><circle cx="282" cy="46" r="0.5" opacity="0.7"/>
+    <circle cx="48" cy="468" r="0.5" opacity="0.5"/><circle cx="120" cy="540" r="0.7" opacity="0.65"/>
+    <circle cx="320" cy="498" r="0.6" opacity="0.7"/><circle cx="358" cy="552" r="0.5" opacity="0.55"/>
+    <circle cx="200" cy="38" r="0.6" opacity="0.7"/>
+  </g>
+  <g transform="translate(200,320)">
+    <circle r="100" fill="url(#sunW)"/>
+    <circle r="56" fill="url(#voidW)"/>
+    <g fill="none" stroke="#9bb4d6" stroke-width="2.6" stroke-linecap="round" opacity="0.92">
+      <path d="M -110 0 A 110 110 0 1 1 110 0" />
+      <path d="M 110 0 A 95 95 0 0 1 92 56" />
+    </g>
+    <g fill="none" stroke="#d4b97a" stroke-width="1.1" opacity="0.7">
+      <path d="M -110 0 A 110 110 0 1 1 110 0" />
+    </g>
+    <g transform="translate(95,55) rotate(38)" fill="#9bb4d6" stroke="#0a0f1f" stroke-width="1">
+      <path d="M 0 0 L 22 -8 L 26 0 L 22 8 Z"/>
+      <circle cx="14" cy="0" r="1.6" fill="#d4b97a"/>
+    </g>
+    <g stroke="#9bb4d6" stroke-width="1" opacity="0.5">
+      <line x1="-110" y1="-2" x2="-104" y2="-2"/>
+      <line x1="-95" y1="-55" x2="-90" y2="-58"/>
+      <line x1="-55" y1="-95" x2="-58" y2="-100"/>
+      <line x1="0" y1="-110" x2="0" y2="-116"/>
+      <line x1="55" y1="-95" x2="58" y2="-100"/>
+      <line x1="95" y1="-55" x2="100" y2="-58"/>
+    </g>
+  </g>
+  <rect x="22" y="22" width="356" height="556" fill="none" stroke="#9bb4d6" stroke-width="0.7" opacity="0.3"/>
+  <g font-family="Iowan Old Style, Palatino, Georgia, serif" fill="#9bb4d6" text-anchor="middle">
+    <text x="200" y="98" font-size="20" font-weight="700" letter-spacing="9" opacity="0.85">THE WYRN</text>
+    <text x="200" y="134" font-size="14" letter-spacing="6" opacity="0.7">THAT DEVOURED</text>
+    <text x="200" y="178" font-size="44" font-weight="700" letter-spacing="6">HEAVEN</text>
+  </g>
+  <g font-family="Iowan Old Style, Palatino, Georgia, serif" text-anchor="middle">
+    <text x="200" y="520" font-size="11" fill="#7e8aa8" letter-spacing="6">BOOK I</text>
+    <line x1="140" y1="540" x2="260" y2="540" stroke="#9bb4d6" stroke-width="0.6" opacity="0.55"/>
+  </g>
+</svg>`;
+  }
+
+  function openLibrary() {
+    buildLibrary();
+    $('library-sheet').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLibrary() {
+    $('library-sheet').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  async function buildLibrary() {
+    const grid = $('library-grid'); grid.innerHTML = '';
+    let cached = {};
+    try {
+      const items = await dbList();
+      for (const it of items) {
+        if (!it.value) continue;
+        const bid = it.value.bookId || 'vehl';
+        cached[bid] = (cached[bid] || 0) + 1;
+      }
+    } catch(e){}
+    for (const b of BOOKS) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'book-card' + (b.id === state.book ? ' active' : '');
+      card.innerHTML = `
+        <div class="book-cover">${coverSVG(b)}</div>
+        <div class="book-meta">
+          <div class="book-series">${escHTML(b.seriesTitle)}</div>
+          <div class="book-sub">${escHTML(b.bookLabel)}${b.bookTitle ? ' &middot; ' + escHTML(b.bookTitle) : ''}</div>
+          <div class="book-stat">${b.chapters.length || 'No'} chapter${b.chapters.length === 1 ? '' : 's'}${cached[b.id] ? ' &middot; ' + cached[b.id] + ' cached' : ''}</div>
+        </div>`;
+      card.addEventListener('click', () => gotoBook(b.id));
+      grid.appendChild(card);
+    }
+  }
+
   function updateChapterNav() {
-    const idx = CHAPTERS.findIndex(c => c.id === state.chapter);
-    const ch = CHAPTERS[idx]; if (!ch) return;
+    const idx = getChapters().findIndex(c => c.id === state.chapter);
+    const ch = getChapters()[idx]; if (!ch) return;
     $('ch-current').textContent = ch.label;
     $('btn-prev-ch').disabled = idx <= 0;
-    $('btn-next-ch').disabled = idx >= CHAPTERS.length - 1;
+    $('btn-next-ch').disabled = idx >= getChapters().length - 1;
   }
 
   async function buildChapterPicker() {
@@ -3454,7 +3776,7 @@ He would, after some thought, say a single word aloud to the empty room.
       const items = await dbList();
       for (const it of items) if (it.value && it.value.chapterId != null) cached.add(it.value.chapterId);
     } catch(e){}
-    for (const c of CHAPTERS) {
+    for (const c of getChapters()) {
       const b = document.createElement('button');
       b.className = 'ch-picker-item' + (c.id === state.chapter ? ' active' : '');
       b.type = 'button';
@@ -3478,7 +3800,7 @@ He would, after some thought, say a single word aloud to the empty room.
 
   function buildChapterChips() {
     const bar = $('chapters'); bar.innerHTML = '';
-    for (const c of CHAPTERS) {
+    for (const c of getChapters()) {
       const b = document.createElement('button');
       b.className = 'chip' + (c.id === state.chapter ? ' active' : '');
       b.dataset.cid = c.id;
@@ -3490,13 +3812,16 @@ He would, after some thought, say a single word aloud to the empty room.
     refreshCacheSummary();
   }
 
+$('btn-library').addEventListener('click', openLibrary);
+  $('btn-library-close').addEventListener('click', closeLibrary);
+
   $('btn-prev-ch').addEventListener('click', () => {
-    const idx = CHAPTERS.findIndex(c => c.id === state.chapter);
-    if (idx > 0) gotoChapter(CHAPTERS[idx - 1].id);
+    const idx = getChapters().findIndex(c => c.id === state.chapter);
+    if (idx > 0) gotoChapter(getChapters()[idx - 1].id);
   });
   $('btn-next-ch').addEventListener('click', () => {
-    const idx = CHAPTERS.findIndex(c => c.id === state.chapter);
-    if (idx >= 0 && idx < CHAPTERS.length - 1) gotoChapter(CHAPTERS[idx + 1].id);
+    const idx = getChapters().findIndex(c => c.id === state.chapter);
+    if (idx >= 0 && idx < getChapters().length - 1) gotoChapter(getChapters()[idx + 1].id);
   });
   $('btn-ch-label').addEventListener('click', async (e) => {
     e.stopPropagation();
@@ -3587,7 +3912,7 @@ He would, after some thought, say a single word aloud to the empty room.
     else if (e.code === 'ArrowLeft'  && e.shiftKey) $('btn-prev-ch').click();
     else if (e.code === 'ArrowRight') $('btn-fwd').click();
     else if (e.code === 'ArrowLeft')  $('btn-back').click();
-    else if (e.code === 'Escape')     closeChapterPicker();
+    else if (e.code === 'Escape')     { closeChapterPicker(); closeLibrary(); }
   });
 
   let lastY = window.scrollY;
@@ -3601,11 +3926,13 @@ He would, after some thought, say a single word aloud to the empty room.
 
   if ('mediaSession' in navigator) {
     const setTrackMeta = () => {
-      const cfg = CHAPTERS.find(c => c.id === state.chapter);
+      const cfg = getChapters().find(c => c.id === state.chapter);
+      const b = getCurrentBook();
+      if (!cfg) return;
       navigator.mediaSession.metadata = new MediaMetadata({
         title: `Chapter ${cfg.label}`,
-        artist: 'The Hollow Crown of Vehl · Book I',
-        album: 'The Eighth Ash',
+        artist: `${b.seriesTitle} · ${b.bookLabel}`,
+        album: b.bookTitle || b.bookLabel,
       });
     };
     setTrackMeta();
@@ -3617,11 +3944,20 @@ He would, after some thought, say a single word aloud to the empty room.
   }
 
   (async function init() {
+    await migrateOldCacheKeys();
+    updateCrest();
     buildVoiceSelect();
     buildChapterChips();
     updateChapterNav();
     buildChapterPicker();
-    renderChapter(state.chapter);
+    if (getChapters().length && getChapters().find(c => c.id === state.chapter)) {
+      renderChapter(state.chapter);
+    } else if (getChapters().length) {
+      state.chapter = getChapters()[0].id; save();
+      renderChapter(state.chapter);
+    } else {
+      renderEmptyBook(getCurrentBook());
+    }
 
     $('apikey').value = state.apiKey || '';
     if (state.apiKey) setKeyStatus('ready', 'API key saved'); else setKeyStatus('', 'no key set');
