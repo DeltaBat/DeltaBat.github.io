@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Hollow Crown of Vehl — Listener</title>
 <meta name="theme-color" content="#0b0b0b">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+<meta name="build-version" content="2026-05-13T05:00Z">
 <style>
   :root{
     --bg:        #0b0b0b;
@@ -179,6 +183,25 @@
   .ch-label:hover{ color:var(--gold); }
   .ch-label .ch-prefix{ opacity:0.55; margin-right:5px; }
   .ch-btn svg{ width:16px; height:16px; }
+
+  .update-banner{
+    position:fixed; top:80px; left:50%; transform:translateX(-50%);
+    z-index:150;
+    background:var(--panel); color:var(--ink);
+    border:1px solid var(--gold); border-radius:999px;
+    padding:6px 6px 6px 18px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:var(--shadow);
+    font-size:0.88rem;
+    max-width:92vw;
+  }
+  .update-banner button{
+    background:var(--gold); color:#0b0b0b; border:none;
+    border-radius:999px; padding:8px 16px;
+    font:inherit; font-size:0.85rem; font-weight:700; cursor:pointer;
+    transition:background 160ms ease;
+  }
+  .update-banner button:hover{ background:var(--gold-hot); }
 
   .library-sheet{
     position:fixed; inset:0; z-index:200;
@@ -527,8 +550,13 @@
       </div>
     </div>
 
-    <div class="field" style="text-align:right; opacity:0.55;">
-      <span class="hint" style="margin:0; font-family:'SF Mono','JetBrains Mono',monospace; font-size:0.7rem;">build 2026-05-11.r4</span>
+    <div class="field">
+      <label>App updates</label>
+      <div class="row" style="margin-bottom:8px;">
+        <span id="build-status" class="hint" style="margin:0">current build</span>
+        <button class="control" id="btn-check-update" type="button">Check for updates</button>
+      </div>
+      <p class="hint">This page silently checks for a new version when you open it, when you switch back to the tab, and every five minutes. A banner appears when one is ready.</p>
     </div>
 
   </div>
@@ -4352,6 +4380,45 @@ $('btn-library').addEventListener('click', openLibrary);
     audio.addEventListener('loadedmetadata', setTrackMeta);
   }
 
+  // ---- update checker ----
+  const BUILD_VERSION = (document.querySelector('meta[name="build-version"]') || {}).content || '';
+  let updateBannerShown = false;
+  async function checkForUpdate(verbose = false) {
+    try {
+      const url = location.pathname + '?cb=' + Date.now();
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const text = await r.text();
+      const m = text.match(/<meta\s+name=["']build-version["']\s+content=["']([^"']+)["']/);
+      if (!m) {
+        if (verbose) toast('No build version found on server.', 'error');
+        return;
+      }
+      const live = m[1];
+      if (live && live !== BUILD_VERSION) {
+        showUpdateBanner(live);
+      } else if (verbose) {
+        toast('You are on the latest version.', 'good');
+      }
+    } catch (e) {
+      if (verbose) toast("Couldn't check for updates: " + (e.message || e), 'error');
+    }
+  }
+  function showUpdateBanner(liveVersion) {
+    if (updateBannerShown) return;
+    updateBannerShown = true;
+    const banner = document.createElement('div');
+    banner.className = 'update-banner';
+    banner.id = 'update-banner';
+    banner.innerHTML = `
+      <span>New version available</span>
+      <button type="button">Reload</button>`;
+    banner.querySelector('button').addEventListener('click', () => {
+      location.href = location.pathname + '?v=' + Date.now();
+    });
+    document.body.appendChild(banner);
+  }
+
   (async function init() {
     await migrateOldCacheKeys();
     updateCrest();
@@ -4378,6 +4445,19 @@ $('btn-library').addEventListener('click', openLibrary);
 
     await loadAudioForChapter();
     await refreshCacheSummary();
+
+    // ---- wire up update-check button + auto checks ----
+    if ($('btn-check-update')) {
+      $('btn-check-update').addEventListener('click', () => checkForUpdate(true));
+    }
+    if ($('build-status')) {
+      $('build-status').textContent = 'build ' + (BUILD_VERSION || 'unknown');
+    }
+    checkForUpdate(false);
+    setInterval(() => checkForUpdate(false), 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkForUpdate(false);
+    });
   })();
 })();
 </script>
