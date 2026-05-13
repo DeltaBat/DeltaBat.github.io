@@ -8,7 +8,7 @@
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<meta name="build-version" content="2026-05-13T13:54Z">
+<meta name="build-version" content="2026-05-13T22:07Z">
 <style>
   :root{
     --bg:        #0b0b0b;
@@ -4527,6 +4527,9 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
   let sentences = [];
   let totalChars = 0;
   let curSentence = 0;
+  // When non-null, the audio came with a sidecar JSON of per-sentence start
+  // times — used for exact sync. Otherwise we fall back to linear interp.
+  let sentenceTimings = null;
 
   function renderChapter(chapterId) {
     const { title, body } = loadChapterRaw(chapterId);
@@ -4587,6 +4590,14 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
   }
 
   function sentenceFromAudioTime(t, duration) {
+    if (sentenceTimings && sentenceTimings.length) {
+      let lo = 0, hi = sentenceTimings.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (sentenceTimings[mid].startTime <= t) lo = mid; else hi = mid - 1;
+      }
+      return Math.min(lo, sentences.length - 1);
+    }
     if (!duration || !sentences.length) return 0;
     const frac = Math.max(0, Math.min(1, t / duration));
     const charPos = frac * totalChars;
@@ -4598,6 +4609,9 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
     return lo;
   }
   function audioTimeForSentence(idx, duration) {
+    if (sentenceTimings && sentenceTimings[idx]) {
+      return sentenceTimings[idx].startTime;
+    }
     if (!sentences[idx] || !duration || !totalChars) return 0;
     return (sentences[idx].charStart / totalChars) * duration;
   }
@@ -4845,7 +4859,9 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
     $('audio-cta').style.display = 'none';
     $('btn-play').disabled = false;
     showDownloadLink(blob, state.chapter);
-    currentDuration = await computeDuration(blob);
+    if (!currentDuration) {
+      currentDuration = await computeDuration(blob);
+    }
     const k = cacheKey(state.book, state.chapter, usedVoice || state.voice);
     const pos = state.audioPos[k] || 0;
     audio.addEventListener('loadedmetadata', () => {
@@ -4864,6 +4880,7 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
     $('progress').style.setProperty('--p', '0%');
     hideDownloadLink();
     currentDuration = 0;
+    sentenceTimings = null;
 
     const ch = getChapters().find(c => c.id === state.chapter);
     if (!ch) {
@@ -4873,10 +4890,22 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
 
     // (1) Try pre-rendered audio committed to the repo
     try {
-      const url = `audio/${ch.scriptId}-${state.voice}.mp3`;
-      const r = await fetch(url, { cache: 'force-cache' });
+      const mp3Url = `audio/${ch.scriptId}-${state.voice}.mp3`;
+      const r = await fetch(mp3Url, { cache: 'force-cache' });
       if (r.ok) {
         const blob = await r.blob();
+        // Try to fetch the sentence-timing sidecar
+        try {
+          const sideUrl = `audio/${ch.scriptId}-${state.voice}.json`;
+          const sr = await fetch(sideUrl, { cache: 'force-cache' });
+          if (sr.ok) {
+            const sidecar = await sr.json();
+            if (sidecar && Array.isArray(sidecar.sentences)) {
+              sentenceTimings = sidecar.sentences;
+              if (sidecar.totalDuration) currentDuration = sidecar.totalDuration;
+            }
+          }
+        } catch(e){}
         await attachPlayableBlob(blob, state.voice);
         return;
       }
