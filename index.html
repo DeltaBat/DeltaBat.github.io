@@ -8,7 +8,7 @@
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<meta name="build-version" content="2026-05-13T04:42Z">
+<meta name="build-version" content="2026-05-13T13:54Z">
 <style>
   :root{
     --bg:        #0b0b0b;
@@ -4744,10 +4744,13 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
 
       showDownloadLink(playBlob, state.chapter);
 
+      currentDuration = await computeDuration(playBlob);
+
       const buf = all.buffer.slice(all.byteOffset, all.byteOffset + all.byteLength);
       const baseMeta = {
         mimeType: 'audio/mpeg',
         size: buf.byteLength,
+        duration: currentDuration,
         chars: ttsText.length, voice: state.voice,
         bookId: state.book, chapterId: state.chapter, generatedAt: Date.now(),
       };
@@ -4808,6 +4811,50 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
   // ---- audio player ----
   const audio = $('audio');
   let currentBlobURL = null;
+  let currentDuration = 0;
+
+  // Decode the MP3 to get a reliable duration. For concatenated TTS MP3s
+  // Safari (and sometimes Chrome) report audio.duration as Infinity, which
+  // breaks the sync math (t / Infinity = 0 → highlight stuck on first line).
+  async function computeDuration(blob) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return 0;
+      const ac = new AC();
+      const buf = await blob.arrayBuffer();
+      const decoded = await ac.decodeAudioData(buf.slice(0));
+      const d = decoded.duration;
+      try { ac.close(); } catch(e){}
+      return isFinite(d) ? d : 0;
+    } catch(e) {
+      console.warn('decodeAudioData failed:', e);
+      return 0;
+    }
+  }
+
+  function effectiveDuration() {
+    if (currentDuration && isFinite(currentDuration)) return currentDuration;
+    const d = audio.duration;
+    return (d && isFinite(d)) ? d : 0;
+  }
+
+  async function attachPlayableBlob(blob, usedVoice) {
+    currentBlobURL = URL.createObjectURL(blob);
+    audio.src = currentBlobURL;
+    audio.playbackRate = state.rate;
+    $('audio-cta').style.display = 'none';
+    $('btn-play').disabled = false;
+    showDownloadLink(blob, state.chapter);
+    currentDuration = await computeDuration(blob);
+    const k = cacheKey(state.book, state.chapter, usedVoice || state.voice);
+    const pos = state.audioPos[k] || 0;
+    audio.addEventListener('loadedmetadata', () => {
+      const d = effectiveDuration();
+      if (pos > 0 && pos < (d - 2)) audio.currentTime = pos;
+      updateTimecode();
+      setActive(sentenceFromAudioTime(audio.currentTime, d), { scroll: false });
+    }, { once: true });
+  }
 
   async function loadAudioForChapter() {
     if (currentBlobURL) { URL.revokeObjectURL(currentBlobURL); currentBlobURL = null; }
@@ -4816,12 +4863,26 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
     $('timecode').textContent = '--:-- / --:--';
     $('progress').style.setProperty('--p', '0%');
     hideDownloadLink();
+    currentDuration = 0;
 
-    if (!getChapters().find(c => c.id === state.chapter)) {
+    const ch = getChapters().find(c => c.id === state.chapter);
+    if (!ch) {
       $('audio-cta').style.display = 'none';
       return;
     }
 
+    // (1) Try pre-rendered audio committed to the repo
+    try {
+      const url = `audio/${ch.scriptId}-${state.voice}.mp3`;
+      const r = await fetch(url, { cache: 'force-cache' });
+      if (r.ok) {
+        const blob = await r.blob();
+        await attachPlayableBlob(blob, state.voice);
+        return;
+      }
+    } catch (e) { /* fall through to IndexedDB */ }
+
+    // (2) Try IndexedDB cache (per-user generations)
     let entry = null;
     try {
       entry = await dbGet(cacheKey(state.book, state.chapter, state.voice));
@@ -4840,53 +4901,46 @@ Veyr put one new claw forward into the dark of the passage, and then the other, 
         }
       } catch (e) { console.warn('dbList failed:', e); }
     }
-
-    const cta = $('audio-cta');
     let playableBlob = null;
     if (entry) {
       const mime = entry.mimeType || 'audio/mpeg';
-      if (entry.audioBuffer) {
-        playableBlob = new Blob([entry.audioBuffer], { type: mime });
-      } else if (entry.audioB64) {
+      if (entry.audioBuffer) playableBlob = new Blob([entry.audioBuffer], { type: mime });
+      else if (entry.audioB64) {
         const bin = atob(entry.audioB64);
         const bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         playableBlob = new Blob([bytes], { type: mime });
-      } else if (entry.blob) {
-        playableBlob = entry.blob;
-      }
+      } else if (entry.blob) playableBlob = entry.blob;
     }
     if (playableBlob) {
-      currentBlobURL = URL.createObjectURL(playableBlob);
-      audio.src = currentBlobURL;
-      audio.playbackRate = state.rate;
-      cta.style.display = 'none';
-      $('btn-play').disabled = false;
-      const k = cacheKey(state.book, state.chapter, usedVoice);
-      const pos = state.audioPos[k] || 0;
-      audio.addEventListener('loadedmetadata', () => {
-        if (pos > 0 && pos < (audio.duration - 2)) audio.currentTime = pos;
-        updateTimecode();
-        setActive(sentenceFromAudioTime(audio.currentTime, audio.duration), { scroll: false });
-      }, { once: true });
-    } else {
-      cta.style.display = '';
-      $('cta-msg').textContent = state.apiKey
-        ? 'Tap "Generate narration" to convert this chapter into a high-quality audiobook using ' + (VOICES.find(v=>v.name===state.voice)?.label || state.voice) + '.'
-        : 'Open settings and paste your Google Cloud TTS API key to generate studio-quality narration for this chapter.';
+      await attachPlayableBlob(playableBlob, usedVoice);
+      if (entry && !entry.duration && currentDuration) {
+        entry.duration = currentDuration;
+        try { await dbPut(cacheKey(state.book, state.chapter, usedVoice), entry); } catch(e){}
+      } else if (entry && entry.duration && !currentDuration) {
+        currentDuration = entry.duration;
+      }
+      return;
     }
+
+    // (3) No audio anywhere — show CTA
+    $('audio-cta').style.display = '';
+    $('cta-msg').textContent = state.apiKey
+      ? 'Tap "Generate narration" to convert this chapter into a high-quality audiobook using ' + (VOICES.find(v=>v.name===state.voice)?.label || state.voice) + '.'
+      : 'Open settings and paste your Google Cloud TTS API key to generate studio-quality narration for this chapter.';
   }
 
   function updateTimecode() {
-    const t = audio.currentTime || 0, d = audio.duration || 0;
+    const t = audio.currentTime || 0, d = effectiveDuration();
     $('timecode').textContent = fmtTime(t) + ' / ' + fmtTime(d);
     $('progress').style.setProperty('--p', d ? ((t/d)*100).toFixed(2) + '%' : '0%');
   }
 
   audio.addEventListener('timeupdate', () => {
     updateTimecode();
-    if (!audio.duration) return;
-    const idx = sentenceFromAudioTime(audio.currentTime, audio.duration);
+    const d = effectiveDuration();
+    if (!d) return;
+    const idx = sentenceFromAudioTime(audio.currentTime, d);
     if (idx !== curSentence) setActive(idx, { scroll: true });
     state.audioPos[cacheKey(state.book, state.chapter, state.voice)] = audio.currentTime;
     save();
@@ -5279,23 +5333,23 @@ $('btn-library').addEventListener('click', openLibrary);
     if (audio.paused) audio.play().catch(e => toast(e.message, 'error'));
     else audio.pause();
   });
-  $('btn-fwd').addEventListener('click', () => { audio.currentTime = Math.min((audio.duration || 0), audio.currentTime + 10); });
+  $('btn-fwd').addEventListener('click', () => { audio.currentTime = Math.min(effectiveDuration() || (audio.currentTime + 10), audio.currentTime + 10); });
   $('btn-back').addEventListener('click', () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
 
   $('chapter-host').addEventListener('click', (e) => {
     const s = e.target.closest('.s'); if (!s) return;
     const idx = parseInt(s.dataset.s, 10); if (Number.isNaN(idx)) return;
     if (!audio.src) return;
-    audio.currentTime = audioTimeForSentence(idx, audio.duration);
+    audio.currentTime = audioTimeForSentence(idx, effectiveDuration());
     setActive(idx, { scroll: false });
     if (audio.paused) audio.play().catch(() => {});
   });
 
   $('progress').addEventListener('click', (e) => {
-    if (!audio.duration) return;
+    const d = effectiveDuration(); if (!d) return;
     const r = $('progress').getBoundingClientRect();
     const f = (e.clientX - r.left) / r.width;
-    audio.currentTime = Math.max(0, Math.min(audio.duration, f * audio.duration));
+    audio.currentTime = Math.max(0, Math.min(d, f * d));
   });
 
   document.addEventListener('keydown', (e) => {
