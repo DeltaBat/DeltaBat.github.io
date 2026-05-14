@@ -92,6 +92,32 @@
   .objection-they::before { content: '💬 They say: '; color: #888; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 2px; }
   .objection-you { color: #2e7d32; margin-top: 6px; line-height: 1.4; font-weight: 500; }
   .objection-you::before { content: '✅ You say: '; color: #888; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 2px; }
+  .threshold-nudge { background: #fff8e1; border-left: 3px solid #ffb300; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #5d4400; margin-top: 8px; line-height: 1.4; }
+  .threshold-nudge strong { color: #c77800; }
+  .threshold-nudge.met { background: #e8f5e9; border-color: #43a047; color: #1b5e20; }
+  .threshold-nudge.met strong { color: #2e7d32; }
+  .roi-line { font-size: 11px; color: #2e7d32; font-weight: 700; margin-top: 2px; }
+  .recap-btn { display: block; width: 100%; background: #0046be; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; font-family: inherit; }
+  .recap-btn:active { transform: scale(0.98); }
+  .recap-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 20px 12px; }
+  .recap-overlay.open { display: flex; }
+  .recap-card { background: white; border-radius: 16px; padding: 18px 16px; max-width: 480px; width: 100%; box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+  .recap-title { font-size: 18px; font-weight: 800; color: #0046be; margin: 0 0 4px; }
+  .recap-sub { font-size: 12px; color: #888; margin-bottom: 14px; }
+  .recap-section-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px; }
+  .recap-line { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed #eee; }
+  .recap-line:last-child { border-bottom: none; }
+  .recap-line .nm { color: #1d1d1f; }
+  .recap-line .pr { color: #0046be; font-weight: 700; }
+  .recap-total { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 2px solid #1d1d1f; font-size: 15px; font-weight: 800; }
+  .recap-total .pr { color: #0046be; }
+  .recap-goal { font-size: 12px; margin-top: 6px; padding: 8px 10px; border-radius: 6px; background: #fff8e1; color: #5d4400; }
+  .recap-goal.met { background: #e8f5e9; color: #1b5e20; }
+  .recap-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .recap-actions button { flex: 1; padding: 10px; border-radius: 8px; border: 1.5px solid #e8e8ed; background: white; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .recap-actions .primary { background: #0046be; color: white; border-color: #0046be; }
+  .universal-card { background: white; border-radius: 10px; padding: 10px 12px; margin-top: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .universal-card .anchor-item { padding: 0; }
 </style>
 </head>
 <body>
@@ -961,6 +987,141 @@ const OBJECTIONS = {
       { they: "Can I add it later?", you: "Only within a short window — usually 15 days from purchase, and the item has to be unused. Easier to lock it in now while we're already doing paperwork." },
       { they: "Geek Squad gave me a bad experience before.", you: "Sorry about that. Today most repairs are in-store; mail-in is rare. And if something isn't fixed in 2 visits, the plan replaces it. You're not stuck in a loop." }
     ]
+  },
+  universal: {
+    title: '💬 Universal Objections (any product)',
+    items: [
+      { they: "Let me think about it.", you: "Totally fair. While it's on your mind — what would you want to know to make the call? Usually it's price, fit, or timing. I can knock all three out in 60 seconds." },
+      { they: "I want to check online / compare prices.", you: "Smart move. Quick win — we price-match Amazon, Walmart, and Best Buy online. So whatever you find, I can match it right now. Saves you the round trip." },
+      { they: "Amazon / Walmart / Costco has it cheaper.", you: "Show me — I'll match it. Plus you walk out with it today, get install/setup help, and the return window is longer here. Same price, more value." },
+      { they: "I'm just browsing.", you: "All good. While you're here — what brought you in today? Even if you're not buying, I can save you time when you do decide." },
+      { they: "What if I don't like it / it doesn't work?", you: "15-day return window — 60 days if you're a member. Bring it back, full refund, no restocking fee. Zero risk." },
+      { they: "I need to ask my spouse.", you: "Totally — give them a quick call right now. Easier to get the green light while we're standing in front of the product than re-explaining at home." },
+      { they: "I'll come back later this week.", you: "Sure — quick heads up though: this price is good today. Some promos roll off Sunday. I can put it on hold for 24 hours if you want a buffer." },
+      { they: "I don't need it today.", you: "Got it — when do you need it? If it's within 30 days, locking in today's price + financing usually beats waiting. I can also do free delivery so you don't have to haul it." },
+      { they: "Can you do better on the price?", you: "Price is the price — but I can stack value: free delivery, install, member pricing, and rewards. Let's run the numbers — you'll see it's a better deal than the discount you're asking for." },
+      { they: "I bought one here before and had issues.", you: "Sorry about that. What happened? If there's a service issue still open, I can get it escalated today. And whatever you buy now, I'll personally make sure it's set up right before you walk out." }
+    ]
+  }
+};
+
+const FINANCING_TIERS = [
+  { at: 299,  label: '6-month 0% financing' },
+  { at: 499,  label: '12-month 0% financing' },
+  { at: 799,  label: '18-month 0% financing' },
+  { at: 1499, label: '24-month 0% financing' }
+];
+
+function thresholdNudgeHTML(total) {
+  const next = FINANCING_TIERS.filter(t => t.at > total).sort((a,b) => a.at - b.at)[0];
+  if (!next) {
+    return '<div class="threshold-nudge met">🚀 <strong>All 0% financing tiers unlocked.</strong> Lock it in on the BBY Card.</div>';
+  }
+  const diff = Math.ceil(next.at - total);
+  return '<div class="threshold-nudge">💡 <strong>$' + diff + ' more</strong> unlocks <strong>' + next.label + '</strong> on the BBY Card.</div>';
+}
+
+function membershipROIHTML(otherTotal, plan) {
+  // Plus saves ~6% via member pricing on a basket; Total saves member pricing + free install + extended returns
+  const rate = plan === 'total' ? 0.10 : 0.06;
+  const savings = Math.round(otherTotal * rate);
+  if (savings <= 0) return '';
+  return '<div class="roi-line">💰 Saves ~$' + savings + ' on today\'s basket alone</div>';
+}
+
+function universalObjectionsHTML() {
+  return '<div class="universal-card">' +
+    '<div class="anchor-item expandable" onclick="toggleObjection(this)" data-obj="universal">' +
+      '<span class="name">💬 Common Objections — any product</span>' +
+      '<span class="price">10 counters</span>' +
+    '</div>' +
+    objectionPanelHTML('universal') +
+  '</div>';
+}
+
+let LAST_RECAP = { name: '', playbook: '', items: [], anchors: [], total: 0, goal: 0 };
+const RECAP_DATA = {};
+window.RECAP_DATA = RECAP_DATA;
+
+function openRecap(payload) {
+  LAST_RECAP = payload;
+  const fmt = n => '$' + n.toFixed(0);
+  const met = payload.total >= payload.goal;
+  const items = payload.items.length === 0
+    ? '<div style="font-size:12px;color:#888;font-style:italic;">No basket items yet — keep building.</div>'
+    : payload.items.map(i => '<div class="recap-line"><span class="nm">' + i.name + '</span><span class="pr">' + (i.price > 0 ? fmt(i.price) : '—') + '</span></div>').join('');
+  const anchors = payload.anchors.map(a => '<div class="recap-line"><span class="nm">' + a.name + '</span><span class="pr">' + (a.price > 0 ? fmt(a.price) : 'KPI') + '</span></div>').join('');
+
+  const html =
+    '<div class="recap-card">' +
+      '<h2 class="recap-title">📋 Your Setup Recap</h2>' +
+      '<div class="recap-sub">' + (payload.name ? payload.name + ' · ' : '') + payload.playbook + ' · ' + new Date().toLocaleDateString() + '</div>' +
+      '<div class="recap-section-title">⭐ Big 3 Pitched</div>' + anchors +
+      '<div class="recap-section-title">🛒 Items</div>' + items +
+      '<div class="recap-total"><span>Attach Total</span><span class="pr">' + fmt(payload.total) + '</span></div>' +
+      '<div class="recap-goal ' + (met ? 'met' : '') + '">' + (met ? '✅ Goal of ' + fmt(payload.goal) + ' met!' : '🎯 Goal: ' + fmt(payload.goal) + ' — $' + Math.max(0, payload.goal - payload.total).toFixed(0) + ' to go') + '</div>' +
+      '<div class="recap-actions">' +
+        '<button onclick="copyRecap()">📋 Copy</button>' +
+        '<button onclick="shareRecap()">↗ Share</button>' +
+        '<button class="primary" onclick="closeRecap()">Done</button>' +
+      '</div>' +
+    '</div>';
+
+  let overlay = document.getElementById('recap-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'recap-overlay';
+    overlay.className = 'recap-overlay';
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeRecap(); });
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = html;
+  overlay.classList.add('open');
+}
+
+window.closeRecap = function() {
+  const overlay = document.getElementById('recap-overlay');
+  if (overlay) overlay.classList.remove('open');
+};
+
+function recapAsText() {
+  const fmt = n => '$' + n.toFixed(0);
+  const p = LAST_RECAP;
+  const lines = [];
+  lines.push('Your Setup — ' + p.playbook + (p.name ? ' for ' + p.name : ''));
+  lines.push('');
+  if (p.anchors.length) {
+    lines.push('Always Pitched:');
+    p.anchors.forEach(a => lines.push('  • ' + a.name + (a.price > 0 ? ' — ' + fmt(a.price) : '')));
+    lines.push('');
+  }
+  if (p.items.length) {
+    lines.push('Items:');
+    p.items.forEach(i => lines.push('  • ' + i.name + (i.price > 0 ? ' — ' + fmt(i.price) : '')));
+    lines.push('');
+  }
+  lines.push('Attach Total: ' + fmt(p.total) + ' / goal ' + fmt(p.goal));
+  return lines.join('\n');
+}
+
+window.copyRecap = function() {
+  const text = recapAsText();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); alert('Copied to clipboard'); } catch(e) { alert('Copy failed — long-press and copy manually'); }
+    document.body.removeChild(ta);
+  }
+};
+
+window.shareRecap = function() {
+  const text = recapAsText();
+  if (navigator.share) {
+    navigator.share({ title: 'My Setup', text: text }).catch(() => {});
+  } else {
+    copyRecap();
   }
 };
 
@@ -1237,6 +1398,7 @@ function renderRecs_computer(recs) {
   const others = unique.filter(r => !r.anchor);
 
   const total = unique.reduce((s, r) => s + (r.price || 0), 0);
+  const otherTotal = others.reduce((s, r) => s + (r.price || 0), 0);
   const pct = Math.min(100, Math.round((total / COMPUTER_GOAL) * 100));
   const met = total >= COMPUTER_GOAL;
   const fmt = n => '$' + n.toFixed(0);
@@ -1251,6 +1413,7 @@ function renderRecs_computer(recs) {
       '<div class="goal-status ' + (met ? 'met' : '') + '">' +
         (met ? '✅ Goal met — keep stacking value!' : 'Keep building — ' + fmt(COMPUTER_GOAL - total) + ' to goal') +
       '</div>' +
+      thresholdNudgeHTML(total) +
     '</div>';
 
   const anchorHTML = anchors.length === 0 ? '' :
@@ -1260,16 +1423,13 @@ function renderRecs_computer(recs) {
         const expandable = !!OBJECTIONS[r.anchor];
         const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
         const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="' + r.anchor + '"' : '';
+        const roi = r.anchor === 'membership' ? membershipROIHTML(otherTotal, r.name.indexOf('Total') >= 0 ? 'total' : 'plus') : '';
         return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
           '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
+          roi +
           (expandable ? objectionPanelHTML(r.anchor) : '');
       }).join('') +
     '</div>';
-
-  if (others.length === 0 && anchors.length === 0) {
-    list.innerHTML = '<div class="empty-rec">Start answering questions — attach recs appear here</div>';
-    return;
-  }
 
   const itemsHTML = others.map(r => {
     const priceTag = r.price > 0 ? '<span class="price">' + fmt(r.price) + '</span>' : '';
@@ -1281,7 +1441,17 @@ function renderRecs_computer(recs) {
       '</span></div>';
   }).join('');
 
-  list.innerHTML = goalHTML + anchorHTML + itemsHTML;
+  RECAP_DATA.computer = {
+    name: ((document.getElementById('customer-name-computer') || {}).value) || '',
+    playbook: 'Computer',
+    items: others.map(r => ({ name: r.name, price: r.price || 0 })),
+    anchors: anchors.map(a => ({ name: a.name, price: a.price || 0 })),
+    total: total,
+    goal: COMPUTER_GOAL
+  };
+
+  list.innerHTML = goalHTML + anchorHTML + universalObjectionsHTML() + itemsHTML +
+    '<button class="recap-btn" onclick="openRecap(RECAP_DATA.computer)">📋 Show Recap to Customer</button>';
 }
 
 window.updateName_computer = function(val) {
@@ -1432,6 +1602,7 @@ function renderRecs_home_theater(recs) {
   const anchors = unique.filter(r => r.anchor);
   const others = unique.filter(r => !r.anchor);
   const total = unique.reduce((s, r) => s + (r.price || 0), 0);
+  const otherTotal = others.reduce((s, r) => s + (r.price || 0), 0);
   const pct = Math.min(100, Math.round((total / HT_GOAL) * 100));
   const met = total >= HT_GOAL;
   const fmt = n => '$' + n.toFixed(0);
@@ -1446,6 +1617,7 @@ function renderRecs_home_theater(recs) {
       '<div class="goal-status ' + (met ? 'met' : '') + '">' +
         (met ? '✅ Goal met — keep stacking value!' : 'Keep building — ' + fmt(HT_GOAL - total) + ' to goal') +
       '</div>' +
+      thresholdNudgeHTML(total) +
     '</div>';
 
   const anchorHTML = anchors.length === 0 ? '' :
@@ -1455,8 +1627,10 @@ function renderRecs_home_theater(recs) {
         const expandable = !!OBJECTIONS[r.anchor];
         const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
         const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="' + r.anchor + '"' : '';
+        const roi = r.anchor === 'membership' ? membershipROIHTML(otherTotal, r.name.indexOf('Total') >= 0 ? 'total' : 'plus') : '';
         return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
           '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
+          roi +
           (expandable ? objectionPanelHTML(r.anchor) : '');
       }).join('') +
     '</div>';
@@ -1471,7 +1645,17 @@ function renderRecs_home_theater(recs) {
       '</span></div>';
   }).join('');
 
-  list.innerHTML = goalHTML + anchorHTML + itemsHTML;
+  RECAP_DATA.home_theater = {
+    name: '',
+    playbook: 'Home Theater',
+    items: others.map(r => ({ name: r.name, price: r.price || 0 })),
+    anchors: anchors.map(a => ({ name: a.name, price: a.price || 0 })),
+    total: total,
+    goal: HT_GOAL
+  };
+
+  list.innerHTML = goalHTML + anchorHTML + universalObjectionsHTML() + itemsHTML +
+    '<button class="recap-btn" onclick="openRecap(RECAP_DATA.home_theater)">📋 Show Recap to Customer</button>';
 }
 
 window.resetAll_home_theater = function() {
