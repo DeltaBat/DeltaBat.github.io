@@ -922,51 +922,59 @@
 </div>
 
 <script>
-const BBY_CARD_OBJECTIONS = [
-  {
-    they: "I have too many cards already.",
-    you: "Totally fair. This one only fires when you shop here, and you get 5% back on every purchase — usually pays for itself before the next bill. Want me to show what you'd bank today?"
+const OBJECTIONS = {
+  card: {
+    title: '💳 BBY Card Objection Handlers',
+    items: [
+      { they: "I have too many cards already.", you: "Totally fair. This one only fires when you shop here, and you get 5% back on every purchase — usually pays for itself before the next bill. Want me to show what you'd bank today?" },
+      { they: "I don't want my credit pulled.", you: "Soft check first — doesn't impact your score. You see the offer, then decide. No commitment. Takes about 60 seconds on your phone." },
+      { they: "The interest rate is too high.", you: "Yep — but with 0% financing on this purchase, no interest if you pay it off in the promo window. Treat it like a no-fee installment plan." },
+      { they: "I'd rather just pay cash / debit.", you: "Totally cool. But if you run it on the card and pay it off the same day, you bank the 5% back. Basically a one-day loan to get the discount." },
+      { they: "I don't shop here enough to make it worth it.", you: "Fair. Today alone gets you back about $[X] on this basket. One big purchase a year covers it. And the 0% financing is there when the next TV or laptop comes up." },
+      { they: "Let me think about it.", you: "Sure. One catch though — the financing offer is tied to today's price. Easiest move is to apply now, take it if approved, and decide at the register. No pressure either way." },
+      { they: "I had a card before — they closed it.", you: "Happens with inactivity. Doesn't block you from reapplying. The 5% back is the same, and current promos are usually better than what you had." },
+      { they: "My spouse handles the finances.", you: "Smart. Two options — either add them to the account, or shoot them a quick text. When they hear it's 5% back plus 0% on what you're buying, it's usually a quick yes." }
+    ]
   },
-  {
-    they: "I don't want my credit pulled.",
-    you: "Soft check first — doesn't impact your score. You see the offer, then decide. No commitment. Takes about 60 seconds on your phone."
+  membership: {
+    title: '⭐ Plus / Total Membership Objection Handlers',
+    items: [
+      { they: "I don't shop here enough to justify it.", you: "Membership pays itself back fast — free shipping on what you'd order anyway, plus member-only pricing. Today's basket alone might cover the fee. Want me to total what you'd save?" },
+      { they: "I already have Amazon Prime / free shipping elsewhere.", you: "Sure — but Plus adds member-only prices on top of shipping. Those discounts don't exist on Amazon. Plus extended returns (60 days vs 15). Different value, not the same thing." },
+      { they: "Why pay when I can just buy at full price?", you: "Member price is often $30–$100 less on the same item. If you save $X today with member pricing, the membership pays itself off in one trip." },
+      { they: "I had Totaltech and it wasn't worth it.", you: "Total replaced Totaltech and rebuilt the value: same 24/7 support, 2-year protection on everything you buy, member pricing across the store. Bigger benefit, lower price." },
+      { they: "Subscriptions add up — I'm cutting them.", you: "Get it. Difference is most subs charge monthly forever; this one earns back on actual purchases. Cancel anytime if you stop seeing value." },
+      { they: "What if I never need tech support?", you: "Fair — but Total is more than support. You get protection on what you've already bought, install discounts, and member pricing on the next purchase. Support is just one piece." },
+      { they: "Does it auto-renew? I hate that.", you: "Auto-renew is on by default, but you control it from your account. Set a calendar reminder, decide at renewal. No mystery charges." },
+      { they: "Sounds like a sales pitch.", you: "It is — but it's also math. Member pricing on today's basket saves $X. If that's more than the fee, you walk out up money. That's the whole pitch." }
+    ]
   },
-  {
-    they: "The interest rate is too high.",
-    you: "Yep — but with 0% financing on this purchase, no interest if you pay it off in the promo window. Treat it like a no-fee installment plan."
-  },
-  {
-    they: "I'd rather just pay cash / debit.",
-    you: "Totally cool. But if you run it on the card and pay it off the same day, you bank the 5% back. Basically a one-day loan to get the discount."
-  },
-  {
-    they: "I don't shop here enough to make it worth it.",
-    you: "Fair. Today alone gets you back about $[X] on this basket. One big purchase a year covers it. And the 0% financing is there when the next TV or laptop comes up."
-  },
-  {
-    they: "Let me think about it.",
-    you: "Sure. One catch though — the financing offer is tied to today's price. Easiest move is to apply now, take it if approved, and decide at the register. No pressure either way."
-  },
-  {
-    they: "I had a card before — they closed it.",
-    you: "Happens with inactivity. Doesn't block you from reapplying. The 5% back is the same, and current promos are usually better than what you had."
-  },
-  {
-    they: "My spouse handles the finances.",
-    you: "Smart. Two options — either add them to the account, or shoot them a quick text. When they hear it's 5% back plus 0% on what you're buying, it's usually a quick yes."
+  protection: {
+    title: '🛡️ Geek Squad Protection Objection Handlers',
+    items: [
+      { they: "I'll just use the manufacturer warranty.", you: "Manufacturer covers defects only — no drops, spills, surges, or anything you'd actually call about. And it's 1 year. GSP picks up where that stops, including accidents." },
+      { they: "I never break my stuff.", you: "Half the people who say that file a claim. The plan also covers power surges, battery failure after year 1, and wear-and-tear — stuff that happens whether you're careful or not." },
+      { they: "Too expensive.", you: "One repair usually costs 3x the plan. A laptop screen alone is $400–$600. Plan is a fraction of that and covers multiple claims." },
+      { they: "My credit card extends the warranty.", you: "Card extensions cover manufacturer defects only — same as the original warranty. They don't cover accidental damage. Totally different coverage." },
+      { they: "If it breaks I'll just buy a new one.", you: "Sure — but think about retail price for a replacement vs. a covered repair under the plan. Math usually favors the plan. And no-lemon clause: 3rd repair = replacement." },
+      { they: "I don't want to pay for something I might not use.", you: "Same logic as car insurance — you don't want to use it, but you're glad it's there. And if you don't claim, the peace of mind alone usually pays for itself." },
+      { they: "Can I add it later?", you: "Only within a short window — usually 15 days from purchase, and the item has to be unused. Easier to lock it in now while we're already doing paperwork." },
+      { they: "Geek Squad gave me a bad experience before.", you: "Sorry about that. Today most repairs are in-store; mail-in is rare. And if something isn't fixed in 2 visits, the plan replaces it. You're not stuck in a loop." }
+    ]
   }
-];
+};
 
 function objectionPanelHTML(type) {
-  if (type !== 'card') return '';
-  const items = BBY_CARD_OBJECTIONS.map(o =>
+  const data = OBJECTIONS[type];
+  if (!data) return '';
+  const items = data.items.map(o =>
     '<div class="objection">' +
       '<div class="objection-they">' + o.they + '</div>' +
       '<div class="objection-you">' + o.you + '</div>' +
     '</div>'
   ).join('');
   return '<div class="objection-panel" data-for="' + type + '" style="display:none">' +
-    '<div class="objection-panel-title">🛡️ BBY Card Objection Handlers</div>' +
+    '<div class="objection-panel-title">' + data.title + '</div>' +
     items +
   '</div>';
 }
@@ -1247,14 +1255,14 @@ function renderRecs_computer(recs) {
 
   const anchorHTML = anchors.length === 0 ? '' :
     '<div class="anchors">' +
-      '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
+      '<div class="anchors-title">⭐ Always Pitch — the Big 3 (tap for objection handlers)</div>' +
       anchors.map(r => {
-        const expandable = r.anchor === 'card';
+        const expandable = !!OBJECTIONS[r.anchor];
         const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
-        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="card"' : '';
+        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="' + r.anchor + '"' : '';
         return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
           '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
-          (expandable ? objectionPanelHTML('card') : '');
+          (expandable ? objectionPanelHTML(r.anchor) : '');
       }).join('') +
     '</div>';
 
@@ -1442,14 +1450,14 @@ function renderRecs_home_theater(recs) {
 
   const anchorHTML = anchors.length === 0 ? '' :
     '<div class="anchors">' +
-      '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
+      '<div class="anchors-title">⭐ Always Pitch — the Big 3 (tap for objection handlers)</div>' +
       anchors.map(r => {
-        const expandable = r.anchor === 'card';
+        const expandable = !!OBJECTIONS[r.anchor];
         const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
-        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="card"' : '';
+        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="' + r.anchor + '"' : '';
         return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
           '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
-          (expandable ? objectionPanelHTML('card') : '');
+          (expandable ? objectionPanelHTML(r.anchor) : '');
       }).join('') +
     '</div>';
 
