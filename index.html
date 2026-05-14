@@ -81,6 +81,17 @@
   .anchor-item .name { font-weight: 700; color: #1d1d1f; }
   .anchor-item .price { font-weight: 700; color: #0046be; }
   .rec-item .price { font-size: 11px; color: #0046be; font-weight: 700; margin-right: 8px; }
+  .anchor-item.expandable { cursor: pointer; user-select: none; }
+  .anchor-item.expandable .name::after { content: ' ▼'; font-size: 9px; color: #999; margin-left: 4px; }
+  .anchor-item.expanded .name::after { content: ' ▲'; }
+  .objection-panel { background: white; border-radius: 8px; padding: 10px 12px; margin-top: 6px; font-size: 12px; border-left: 3px solid #0046be; }
+  .objection-panel-title { font-size: 10px; font-weight: 700; color: #0046be; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .objection { padding: 8px 0; border-bottom: 1px solid #f0f0f3; }
+  .objection:last-child { border-bottom: none; padding-bottom: 0; }
+  .objection-they { color: #1d1d1f; font-weight: 600; line-height: 1.4; }
+  .objection-they::before { content: '💬 They say: '; color: #888; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 2px; }
+  .objection-you { color: #2e7d32; margin-top: 6px; line-height: 1.4; font-weight: 500; }
+  .objection-you::before { content: '✅ You say: '; color: #888; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; display: block; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -911,6 +922,63 @@
 </div>
 
 <script>
+const BBY_CARD_OBJECTIONS = [
+  {
+    they: "I have too many cards already.",
+    you: "Totally fair. This one only fires when you shop here, and you get 5% back on every purchase — usually pays for itself before the next bill. Want me to show what you'd bank today?"
+  },
+  {
+    they: "I don't want my credit pulled.",
+    you: "Soft check first — doesn't impact your score. You see the offer, then decide. No commitment. Takes about 60 seconds on your phone."
+  },
+  {
+    they: "The interest rate is too high.",
+    you: "Yep — but with 0% financing on this purchase, no interest if you pay it off in the promo window. Treat it like a no-fee installment plan."
+  },
+  {
+    they: "I'd rather just pay cash / debit.",
+    you: "Totally cool. But if you run it on the card and pay it off the same day, you bank the 5% back. Basically a one-day loan to get the discount."
+  },
+  {
+    they: "I don't shop here enough to make it worth it.",
+    you: "Fair. Today alone gets you back about $[X] on this basket. One big purchase a year covers it. And the 0% financing is there when the next TV or laptop comes up."
+  },
+  {
+    they: "Let me think about it.",
+    you: "Sure. One catch though — the financing offer is tied to today's price. Easiest move is to apply now, take it if approved, and decide at the register. No pressure either way."
+  },
+  {
+    they: "I had a card before — they closed it.",
+    you: "Happens with inactivity. Doesn't block you from reapplying. The 5% back is the same, and current promos are usually better than what you had."
+  },
+  {
+    they: "My spouse handles the finances.",
+    you: "Smart. Two options — either add them to the account, or shoot them a quick text. When they hear it's 5% back plus 0% on what you're buying, it's usually a quick yes."
+  }
+];
+
+function objectionPanelHTML(type) {
+  if (type !== 'card') return '';
+  const items = BBY_CARD_OBJECTIONS.map(o =>
+    '<div class="objection">' +
+      '<div class="objection-they">' + o.they + '</div>' +
+      '<div class="objection-you">' + o.you + '</div>' +
+    '</div>'
+  ).join('');
+  return '<div class="objection-panel" data-for="' + type + '" style="display:none">' +
+    '<div class="objection-panel-title">🛡️ BBY Card Objection Handlers</div>' +
+    items +
+  '</div>';
+}
+
+window.toggleObjection = function(el) {
+  const panel = el.parentElement.querySelector('.objection-panel[data-for="' + el.dataset.obj + '"]');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  el.classList.toggle('expanded', !open);
+};
+
 function showPlaybook(pid) {
   document.querySelectorAll('.playbook-view').forEach(v => v.style.display = 'none');
   const view = document.getElementById('view-' + pid);
@@ -1180,10 +1248,14 @@ function renderRecs_computer(recs) {
   const anchorHTML = anchors.length === 0 ? '' :
     '<div class="anchors">' +
       '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
-      anchors.map(r =>
-        '<div class="anchor-item"><span class="name">' + r.name + '</span>' +
-        '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>'
-      ).join('') +
+      anchors.map(r => {
+        const expandable = r.anchor === 'card';
+        const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
+        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="card"' : '';
+        return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
+          '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
+          (expandable ? objectionPanelHTML('card') : '');
+      }).join('') +
     '</div>';
 
   if (others.length === 0 && anchors.length === 0) {
@@ -1371,10 +1443,14 @@ function renderRecs_home_theater(recs) {
   const anchorHTML = anchors.length === 0 ? '' :
     '<div class="anchors">' +
       '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
-      anchors.map(r =>
-        '<div class="anchor-item"><span class="name">' + r.name + '</span>' +
-        '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>'
-      ).join('') +
+      anchors.map(r => {
+        const expandable = r.anchor === 'card';
+        const cls = expandable ? 'anchor-item expandable' : 'anchor-item';
+        const onclick = expandable ? ' onclick="toggleObjection(this)" data-obj="card"' : '';
+        return '<div class="' + cls + '"' + onclick + '><span class="name">' + r.name + '</span>' +
+          '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>' +
+          (expandable ? objectionPanelHTML('card') : '');
+      }).join('') +
     '</div>';
 
   const itemsHTML = others.map(r => {
