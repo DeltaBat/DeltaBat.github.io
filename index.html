@@ -65,6 +65,22 @@
   .kit-badge { display: inline-block; font-size: 10px; font-weight: 700; color: #0046be; background: #e6f0ff; padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; }
   @keyframes kit-pop { 0% { opacity: 0; transform: scale(0.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
   .kit-anim { animation: kit-pop 0.35s ease-out; transform-origin: center; transform-box: fill-box; }
+  .goal-tracker { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .goal-tracker-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .goal-tracker-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .goal-tracker-amount { font-size: 16px; font-weight: 700; color: #0046be; }
+  .goal-tracker-amount .of { font-size: 12px; color: #888; font-weight: 600; }
+  .goal-bar { height: 8px; background: #eef0f5; border-radius: 4px; overflow: hidden; }
+  .goal-bar-fill { height: 100%; background: linear-gradient(90deg, #ff6b00, #f9a825); transition: width 0.35s ease-out; border-radius: 4px; }
+  .goal-bar-fill.met { background: linear-gradient(90deg, #2e7d32, #43a047); }
+  .goal-status { font-size: 11px; color: #666; margin-top: 4px; }
+  .goal-status.met { color: #2e7d32; font-weight: 700; }
+  .anchors { background: #fff5e0; border: 1.5px dashed #ff9800; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+  .anchors-title { font-size: 10px; font-weight: 700; color: #c77800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .anchor-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 4px 0; }
+  .anchor-item .name { font-weight: 700; color: #1d1d1f; }
+  .anchor-item .price { font-weight: 700; color: #0046be; }
+  .rec-item .price { font-size: 11px; color: #0046be; font-weight: 700; margin-right: 8px; }
 </style>
 </head>
 <body>
@@ -707,8 +723,137 @@
 
 <div class="playbook-view" id="view-home_theater" style="display:none;">
   <div class="playbook-nav"><button class="back-btn" onclick="showLauncher()">← All Departments</button></div>
-  <div class="header"><h1>🎬 Home Theater Playbook</h1><p>Visual Kit Builder coming next.</p></div>
-  <div class="recommendations"><h2>🛒 Basket Builder</h2><div class="empty-rec">See Computer playbook for the live Visual Kit Builder demo.</div></div>
+  <div class="header"><h1>🎬 Home Theater Playbook</h1><p id="header-sub-home_theater">Tap answers as you ask. Basket goal: $400.</p></div>
+
+  <div class="recommendations">
+    <h2>🛒 Basket Builder</h2>
+    <div id="rec-list-home_theater"><div class="empty-rec">Start answering questions — attach recs appear here</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection_home_theater(this)"><h2>1. The Setup</h2><span class="chevron">▼</span></div>
+    <div class="section-body">
+      <div class="question">
+        <div class="question-text">What kind of setup?</div>
+        <div class="options">
+          <button class="option" data-q="setup" data-val="soundbar">Just a soundbar upgrade</button>
+          <button class="option" data-q="setup" data-val="soundbar-sub">Soundbar + sub</button>
+          <button class="option" data-q="setup" data-val="soundbar-rears">Soundbar + sub + rears (5.1)</button>
+          <button class="option" data-q="setup" data-val="atmos">Full Atmos (5.1.2 / 7.1.4)</button>
+          <button class="option" data-q="setup" data-val="receiver">Receiver + tower speakers</button>
+          <button class="option" data-q="setup" data-val="2ch">2-channel hi-fi / music</button>
+          <button class="option" data-q="setup" data-val="custom">Custom in-wall / in-ceiling</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">Main use? <span class="multi-hint">(tap all)</span></div>
+        <div class="options">
+          <button class="option" data-q="use" data-val="movies" data-multi="1">Movies / cinematic</button>
+          <button class="option" data-q="use" data-val="sports" data-multi="1">Sports</button>
+          <button class="option" data-q="use" data-val="music" data-multi="1">Music listening</button>
+          <button class="option" data-q="use" data-val="gaming" data-multi="1">Gaming</button>
+          <button class="option" data-q="use" data-val="streaming" data-multi="1">Streaming</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection_home_theater(this)"><h2>2. The Room</h2><span class="chevron">▼</span></div>
+    <div class="section-body">
+      <div class="question">
+        <div class="question-text">Apartment / shared walls?</div>
+        <div class="options">
+          <button class="option" data-q="apartment" data-val="yes">Yes — neighbors below/next to</button>
+          <button class="option" data-q="apartment" data-val="house">House — no concerns</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">TV they're pairing with?</div>
+        <div class="options">
+          <button class="option" data-q="tv" data-val="own">Already own — recent</button>
+          <button class="option" data-q="tv" data-val="old">Already own — older</button>
+          <button class="option" data-q="tv" data-val="buying">Buying new TV today</button>
+        </div>
+        <div class="pitch-box">Older TV = check eARC. No eARC = soundbar via optical (loses Atmos).</div>
+      </div>
+      <div class="question">
+        <div class="question-text">Setup confidence?</div>
+        <div class="options">
+          <button class="option" data-q="setup-help" data-val="diy">I'll do it myself</button>
+          <button class="option" data-q="setup-help" data-val="some">Could use guidance</button>
+          <button class="option" data-q="setup-help" data-val="pro">Want pro installation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection_home_theater(this)"><h2>3. Budget</h2><span class="chevron">▼</span></div>
+    <div class="section-body">
+      <div class="question">
+        <div class="question-text">Total system budget?</div>
+        <div class="options">
+          <button class="option" data-q="budget" data-val="low">Under $400</button>
+          <button class="option" data-q="budget" data-val="mid">$400 - $1,000</button>
+          <button class="option" data-q="budget" data-val="high">$1,000 - $2,500</button>
+          <button class="option" data-q="budget" data-val="premium">$2,500 - $5,000</button>
+          <button class="option" data-q="budget" data-val="elite">$5,000+</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">Open to financing or My Best Buy Card?</div>
+        <div class="options">
+          <button class="option" data-q="finance" data-val="yes">Yes</button>
+          <button class="option" data-q="finance" data-val="maybe">Maybe</button>
+          <button class="option" data-q="finance" data-val="no">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header" onclick="toggleSection_home_theater(this)"><h2>4. Accessories Checklist 🎒</h2><span class="chevron">▼</span></div>
+    <div class="section-body">
+      <div class="question">
+        <div class="question-text">Cables <span class="multi-hint">(tap all)</span></div>
+        <div class="options">
+          <button class="option" data-q="acc" data-val="hdmi-21" data-multi="1">HDMI 2.1 (eARC)</button>
+          <button class="option" data-q="acc" data-val="optical" data-multi="1">Optical cable</button>
+          <button class="option" data-q="acc" data-val="speaker-wire" data-multi="1">Speaker wire</button>
+          <button class="option" data-q="acc" data-val="banana" data-multi="1">Banana plugs</button>
+          <button class="option" data-q="acc" data-val="sub-cable" data-multi="1">Subwoofer cable</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">Mounts & Stands</div>
+        <div class="options">
+          <button class="option" data-q="acc" data-val="sb-mount" data-multi="1">Soundbar wall mount</button>
+          <button class="option" data-q="acc" data-val="rear-stands" data-multi="1">Rear speaker stands</button>
+          <button class="option" data-q="acc" data-val="iso-pads" data-multi="1">Speaker isolation pads</button>
+          <button class="option" data-q="acc" data-val="sub-pad" data-multi="1">Sub isolation pad</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">Power & Protection</div>
+        <div class="options">
+          <button class="option" data-q="acc" data-val="surge" data-multi="1">A/V surge protector</button>
+          <button class="option" data-q="acc" data-val="power-cond" data-multi="1">Power conditioner</button>
+          <button class="option" data-q="acc" data-val="ups" data-multi="1">UPS battery backup</button>
+        </div>
+      </div>
+      <div class="question">
+        <div class="question-text">Extras</div>
+        <div class="options">
+          <button class="option" data-q="acc" data-val="headphones" data-multi="1">Wireless TV headphones</button>
+          <button class="option" data-q="acc" data-val="remote" data-multi="1">Universal remote</button>
+          <button class="option" data-q="acc" data-val="mesh" data-multi="1">Mesh Wi-Fi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll_home_theater()">↻ Reset for next customer</button>
 </div>
 
 <div class="playbook-view" id="view-mobile" style="display:none;">
@@ -890,143 +1035,173 @@ function updateScene_computer() {
   if (msg) msg.style.display = anyOn ? 'none' : 'block';
 }
 
+const COMPUTER_GOAL = 200;
+
 function updateRecommendations_computer() {
   const recs = [];
+  const pushTotal = has('budget', 'premium') || has('budget', 'high');
+  const wantsTotal = has('techsavvy', 'no') || has('techsavvy', 'some') || userHas('parent') || pushTotal;
 
-  if (has('broken', 'yes') || has('lifespan', 'long') || has('lifespan', 'mid')) {
-    recs.push({ name: 'Geek Squad Protection Plan', why: 'Covers drops, spills, mechanical failure', tier: 'must' });
-  } else if (state.budget) {
-    recs.push({ name: 'Geek Squad Protection Plan', why: 'Manufacturer warranty is limited', tier: 'high' });
+  // Anchor attaches — the Big 3 we always pitch
+  recs.push({ name: 'My Best Buy Credit Card', why: '0% financing + 5% back', tier: 'must', price: 0, anchor: 'card' });
+  if (wantsTotal) {
+    recs.push({ name: 'My Best Buy Total Membership', why: '24/7 support + protection on everything', tier: 'must', price: 179.99, anchor: 'membership' });
+  } else {
+    recs.push({ name: 'My Best Buy Plus Membership', why: 'Free shipping + member-only prices', tier: 'must', price: 49.99, anchor: 'membership' });
   }
-
-  if (has('techsavvy', 'no') || has('techsavvy', 'some') || userHas('parent') || has('budget', 'high') || has('budget', 'premium')) {
-    recs.push({ name: 'Best Buy Totaltech Membership', why: '24/7 tech support + protection on all devices', tier: 'must' });
-  }
+  recs.push({ name: 'Geek Squad Protection Plan', why: 'Covers drops, spills, mechanical failure', tier: 'must', price: 179.99, anchor: 'protection' });
 
   if (has('techsavvy', 'no') || userHas('parent') || userHas('kid')) {
-    recs.push({ name: 'Geek Squad Setup Service', why: 'In-store or in-home setup', tier: 'high' });
+    recs.push({ name: 'Geek Squad Setup Service', why: 'In-store or in-home setup', tier: 'high', price: 99.99 });
   } else if (has('techsavvy', 'some')) {
-    recs.push({ name: 'Geek Squad Setup Service', why: 'Quick in-store setup option', tier: 'med' });
+    recs.push({ name: 'Geek Squad Setup Service', why: 'Quick in-store setup option', tier: 'med', price: 39.99 });
   }
 
   if (has('replace', 'replace-old') || has('replace', 'upgrade')) {
-    recs.push({ name: 'Data Transfer Service', why: 'Move files from old computer', tier: 'high' });
+    recs.push({ name: 'Data Transfer Service', why: 'Move files from old computer', tier: 'high', price: 99.99 });
   }
 
   if (has('office', 'none') || has('office', 'expired')) {
-    recs.push({ name: 'Microsoft 365', why: 'Word, Excel, PowerPoint + 1TB OneDrive', tier: 'must' });
+    recs.push({ name: 'Microsoft 365 (1 yr)', why: 'Word, Excel, PowerPoint + 1TB OneDrive', tier: 'must', price: 69.99 });
   } else if (useHas('office') && !has('office', 'has')) {
-    recs.push({ name: 'Microsoft 365', why: 'They mentioned Word/Excel use', tier: 'high' });
+    recs.push({ name: 'Microsoft 365 (1 yr)', why: 'They mentioned Word/Excel use', tier: 'high', price: 69.99 });
   }
 
   if (has('security', 'none') || has('security', 'expired')) {
-    recs.push({ name: 'Antivirus / Security Software', why: 'Webroot or McAfee subscription', tier: 'high' });
+    recs.push({ name: 'Antivirus / Security (1 yr)', why: 'Webroot or McAfee subscription', tier: 'high', price: 39.99 });
   }
 
-  const accMap = {
-    bag: 'Laptop Bag / Sleeve',
-    mouse: 'Wireless Mouse',
-    keyboard: 'External Keyboard',
-    monitor: 'External Monitor',
-    webcam: 'External Webcam',
-    headset: 'Headset / Headphones',
-    printer: 'Printer + Ink/Toner',
-    surge: 'Surge Protector',
-    dock: 'USB-C Hub / Docking Station',
-    storage: 'External SSD / Hard Drive'
+  // "Doesn't have" needs map
+  const needsMap = {
+    bag:     { name: 'Laptop Bag / Sleeve', price: 39.99 },
+    mouse:   { name: 'Wireless Mouse', price: 29.99 },
+    keyboard:{ name: 'External Keyboard', price: 49.99 },
+    monitor: { name: 'External Monitor', price: 199.99 },
+    webcam:  { name: 'External Webcam', price: 49.99 },
+    headset: { name: 'Headset / Headphones', price: 79.99 },
+    printer: { name: 'Printer + Ink/Toner', price: 129.99 },
+    surge:   { name: 'Surge Protector', price: 24.99 },
+    dock:    { name: 'USB-C Hub / Docking Station', price: 79.99 },
+    storage: { name: 'External SSD / Hard Drive', price: 89.99 }
   };
   if (state.needs instanceof Set) {
-    state.needs.forEach(n => { if (accMap[n]) recs.push({ name: accMap[n], why: 'They mentioned not having one', tier: 'high' }); });
+    state.needs.forEach(n => { if (needsMap[n]) recs.push({ name: needsMap[n].name, why: 'They mentioned not having one', tier: 'high', price: needsMap[n].price }); });
   }
 
   const accChecklist = {
-    'bag-backpack':       'Laptop Backpack',
-    'bag-sleeve':         'Laptop Sleeve / Case',
-    'bag-messenger':      'Messenger / Briefcase Bag',
-    'mouse-basic':        'Wireless Mouse',
-    'mouse-gaming':       'Gaming Mouse',
-    'mouse-ergo':         'Ergonomic / Vertical Mouse',
-    'keyboard-basic':     'Wireless Keyboard',
-    'keyboard-mech':      'Mechanical / Gaming Keyboard',
-    'mousepad':           'Mousepad / Desk Mat',
-    'monitor-1':          'External Monitor',
-    'monitor-2':          'Dual Monitor Setup',
-    'monitor-ultra':      'Ultrawide / 4K Monitor',
-    'monitor-arm':        'Monitor Arm / Stand',
-    'bluelight':          'Blue Light Glasses',
-    'headphones-wired':   'Wired Headphones',
-    'headphones-wireless':'Wireless Headphones / Earbuds',
-    'headset-gaming':     'Gaming Headset',
-    'speakers':           'Computer Speakers',
-    'webcam':             'External Webcam',
-    'microphone':         'USB Microphone',
-    'ringlight':          'Ring Light / Lighting',
-    'dock':               'USB-C Hub / Docking Station',
-    'adapter':            'Display / HDMI Adapter',
-    'surge':              'Surge Protector',
-    'ups':                'UPS / Battery Backup',
-    'extcharger':         'Extra Charger / Power Brick',
-    'powerbank':          'Power Bank',
-    'cables':             'USB-C / Thunderbolt Cables',
-    'ext-ssd':            'External SSD',
-    'ext-hdd':            'External Hard Drive',
-    'flash':              'Flash Drive / SD Card',
-    'cloud':              'Cloud Backup Subscription',
-    'printer':            'Printer',
-    'ink':                'Ink / Toner',
-    'paper':              'Paper',
-    'shredder':           'Shredder',
-    'cleaning':           'Cleaning Kit',
-    'screenprotect':      'Screen Protector / Privacy Filter',
-    'cablemgmt':          'Cable Management',
-    'cooling':            'Laptop Cooling Pad',
-    'lapstand':           'Laptop Stand / Riser'
+    'bag-backpack':       { name: 'Laptop Backpack', price: 79.99 },
+    'bag-sleeve':         { name: 'Laptop Sleeve / Case', price: 29.99 },
+    'bag-messenger':      { name: 'Messenger / Briefcase Bag', price: 89.99 },
+    'mouse-basic':        { name: 'Wireless Mouse', price: 29.99 },
+    'mouse-gaming':       { name: 'Gaming Mouse', price: 69.99 },
+    'mouse-ergo':         { name: 'Ergonomic / Vertical Mouse', price: 79.99 },
+    'keyboard-basic':     { name: 'Wireless Keyboard', price: 49.99 },
+    'keyboard-mech':      { name: 'Mechanical / Gaming Keyboard', price: 129.99 },
+    'mousepad':           { name: 'Mousepad / Desk Mat', price: 24.99 },
+    'monitor-1':          { name: 'External Monitor', price: 199.99 },
+    'monitor-2':          { name: 'Dual Monitor Setup', price: 399.99 },
+    'monitor-ultra':      { name: 'Ultrawide / 4K Monitor', price: 499.99 },
+    'monitor-arm':        { name: 'Monitor Arm / Stand', price: 89.99 },
+    'bluelight':          { name: 'Blue Light Glasses', price: 24.99 },
+    'headphones-wired':   { name: 'Wired Headphones', price: 49.99 },
+    'headphones-wireless':{ name: 'Wireless Headphones / Earbuds', price: 149.99 },
+    'headset-gaming':     { name: 'Gaming Headset', price: 99.99 },
+    'speakers':           { name: 'Computer Speakers', price: 59.99 },
+    'webcam':             { name: 'External Webcam', price: 49.99 },
+    'microphone':         { name: 'USB Microphone', price: 99.99 },
+    'ringlight':          { name: 'Ring Light / Lighting', price: 39.99 },
+    'dock':               { name: 'USB-C Hub / Docking Station', price: 79.99 },
+    'adapter':            { name: 'Display / HDMI Adapter', price: 19.99 },
+    'surge':              { name: 'Surge Protector', price: 24.99 },
+    'ups':                { name: 'UPS / Battery Backup', price: 99.99 },
+    'extcharger':         { name: 'Extra Charger / Power Brick', price: 59.99 },
+    'powerbank':          { name: 'Power Bank', price: 39.99 },
+    'cables':             { name: 'USB-C / Thunderbolt Cables', price: 19.99 },
+    'ext-ssd':            { name: 'External SSD', price: 99.99 },
+    'ext-hdd':            { name: 'External Hard Drive', price: 69.99 },
+    'flash':              { name: 'Flash Drive / SD Card', price: 19.99 },
+    'cloud':              { name: 'Cloud Backup Subscription', price: 59.99 },
+    'printer':            { name: 'Printer', price: 129.99 },
+    'ink':                { name: 'Ink / Toner', price: 39.99 },
+    'paper':              { name: 'Paper', price: 9.99 },
+    'shredder':           { name: 'Shredder', price: 59.99 },
+    'cleaning':           { name: 'Cleaning Kit', price: 14.99 },
+    'screenprotect':      { name: 'Screen Protector / Privacy Filter', price: 29.99 },
+    'cablemgmt':          { name: 'Cable Management', price: 19.99 },
+    'cooling':            { name: 'Laptop Cooling Pad', price: 29.99 },
+    'lapstand':           { name: 'Laptop Stand / Riser', price: 39.99 }
   };
   if (state.acc instanceof Set) {
-    state.acc.forEach(a => { if (accChecklist[a]) recs.push({ name: accChecklist[a], why: 'Added from accessory checklist', tier: 'high' }); });
+    state.acc.forEach(a => { if (accChecklist[a]) recs.push({ name: accChecklist[a].name, why: 'Added from accessory checklist', tier: 'high', price: accChecklist[a].price }); });
   }
 
-  if (useHas('gaming')) {
-    recs.push({ name: 'Gaming Mouse + Mousepad', why: 'Gaming use case', tier: 'high' });
-    recs.push({ name: 'High refresh monitor (if desktop)', why: 'Gaming use case', tier: 'med' });
-  }
   if (useHas('creative')) {
-    recs.push({ name: 'Color-accurate monitor', why: 'For photo/video editing', tier: 'med' });
-    recs.push({ name: 'External SSD (fast)', why: 'For project files / scratch disk', tier: 'high' });
+    recs.push({ name: 'External SSD (fast)', why: 'For project files / scratch disk', tier: 'high', price: 129.99 });
   }
-
   if (has('wifi', 'bad')) {
-    recs.push({ name: 'Wi-Fi Router / Mesh System', why: 'They said their Wi-Fi is spotty', tier: 'high' });
+    recs.push({ name: 'Wi-Fi Router / Mesh System', why: 'They said their Wi-Fi is spotty', tier: 'high', price: 199.99 });
   } else if (has('wifi', 'ok')) {
-    recs.push({ name: 'Mesh Wi-Fi (mention it)', why: 'Upgrade opportunity', tier: 'med' });
+    recs.push({ name: 'Mesh Wi-Fi (mention it)', why: 'Upgrade opportunity', tier: 'med', price: 199.99 });
   }
-
-  if (has('finance', 'yes') || has('finance', 'maybe')) {
-    recs.push({ name: 'My Best Buy Credit Card', why: '0% financing + 5% back', tier: 'high' });
-  } else if (has('budget', 'high') || has('budget', 'premium')) {
-    recs.push({ name: 'My Best Buy Credit Card', why: 'Worth pitching on $1k+ basket', tier: 'med' });
-  }
-
   if (userHas('business') || useHas('business')) {
-    recs.push({ name: 'Best Buy Business account', why: 'Tax exemption + dedicated rep', tier: 'med' });
+    recs.push({ name: 'Best Buy Business account', why: 'Tax exemption + dedicated rep', tier: 'med', price: 0 });
   }
 
+  renderRecs_computer(recs);
+}
+
+function renderRecs_computer(recs) {
   const list = document.getElementById('rec-list-computer');
-  if (recs.length === 0) {
-    list.innerHTML = '<div class="empty-rec">Start answering questions — attach recs appear here</div>';
-    return;
-  }
   const seen = new Set();
   const unique = recs.filter(r => { if (seen.has(r.name)) return false; seen.add(r.name); return true; });
   const order = { must: 0, high: 1, med: 2 };
   unique.sort((a, b) => order[a.tier] - order[b.tier]);
-  list.innerHTML = unique.map(r =>
-    '<div class="rec-item"><div><div style="font-weight:600;">' + r.name +
-    '</div><div style="font-size:11px;color:#666;">' + r.why +
-    '</div></div><span class="rec-badge ' + r.tier + '">' +
-    (r.tier === 'must' ? 'PITCH' : r.tier === 'high' ? 'STRONG' : 'CONSIDER') +
-    '</span></div>'
-  ).join('');
+
+  const anchors = unique.filter(r => r.anchor);
+  const others = unique.filter(r => !r.anchor);
+
+  const total = unique.reduce((s, r) => s + (r.price || 0), 0);
+  const pct = Math.min(100, Math.round((total / COMPUTER_GOAL) * 100));
+  const met = total >= COMPUTER_GOAL;
+  const fmt = n => '$' + n.toFixed(0);
+
+  const goalHTML =
+    '<div class="goal-tracker">' +
+      '<div class="goal-tracker-row">' +
+        '<span class="goal-tracker-label">Attach Goal</span>' +
+        '<span class="goal-tracker-amount">' + fmt(total) + ' <span class="of">/ ' + fmt(COMPUTER_GOAL) + '</span></span>' +
+      '</div>' +
+      '<div class="goal-bar"><div class="goal-bar-fill ' + (met ? 'met' : '') + '" style="width:' + pct + '%;"></div></div>' +
+      '<div class="goal-status ' + (met ? 'met' : '') + '">' +
+        (met ? '✅ Goal met — keep stacking value!' : 'Keep building — ' + fmt(COMPUTER_GOAL - total) + ' to goal') +
+      '</div>' +
+    '</div>';
+
+  const anchorHTML = anchors.length === 0 ? '' :
+    '<div class="anchors">' +
+      '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
+      anchors.map(r =>
+        '<div class="anchor-item"><span class="name">' + r.name + '</span>' +
+        '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>'
+      ).join('') +
+    '</div>';
+
+  if (others.length === 0 && anchors.length === 0) {
+    list.innerHTML = '<div class="empty-rec">Start answering questions — attach recs appear here</div>';
+    return;
+  }
+
+  const itemsHTML = others.map(r => {
+    const priceTag = r.price > 0 ? '<span class="price">' + fmt(r.price) + '</span>' : '';
+    return '<div class="rec-item">' + priceTag +
+      '<div><div style="font-weight:600;">' + r.name + '</div>' +
+      '<div style="font-size:11px;color:#666;">' + r.why + '</div></div>' +
+      '<span class="rec-badge ' + r.tier + '">' +
+      (r.tier === 'must' ? 'PITCH' : r.tier === 'high' ? 'STRONG' : 'CONSIDER') +
+      '</span></div>';
+  }).join('');
+
+  list.innerHTML = goalHTML + anchorHTML + itemsHTML;
 }
 
 window.updateName_computer = function(val) {
@@ -1046,6 +1221,182 @@ window.resetAll_computer = function() {
   updateRecommendations_computer();
   updateScene_computer();
 };
+
+updateRecommendations_computer();
+})();
+
+(function() {
+const HT_GOAL = 400;
+const state = {};
+
+document.querySelectorAll('#view-home_theater .option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.dataset.q;
+    const val = btn.dataset.val;
+    const multi = btn.dataset.multi === '1';
+    if (multi) {
+      state[q] = state[q] || new Set();
+      if (state[q].has(val)) { state[q].delete(val); btn.classList.remove('selected'); }
+      else { state[q].add(val); btn.classList.add('selected'); }
+    } else {
+      document.querySelectorAll('#view-home_theater .option[data-q="' + q + '"]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state[q] = val;
+    }
+    updateRecommendations_home_theater();
+  });
+});
+
+window.toggleSection_home_theater = function(header) {
+  header.classList.toggle('collapsed');
+  header.nextElementSibling.classList.toggle('hidden');
+};
+
+function has(q, v) {
+  const s = state[q];
+  if (!s) return false;
+  if (s instanceof Set) return s.has(v);
+  return s === v;
+}
+function accHas(v) { return state.acc instanceof Set && state.acc.has(v); }
+function useHas(v) { return state.use instanceof Set && state.use.has(v); }
+
+function updateRecommendations_home_theater() {
+  const recs = [];
+  const pushTotal = has('budget', 'premium') || has('budget', 'elite') || has('setup', 'atmos') || has('setup', 'custom') || has('setup-help', 'pro');
+
+  // Big 3 anchors
+  recs.push({ name: 'My Best Buy Credit Card', why: '0% financing + 5% back', tier: 'must', price: 0, anchor: 'card' });
+  if (pushTotal) {
+    recs.push({ name: 'My Best Buy Total Membership', why: 'Includes install discount + 24/7 support', tier: 'must', price: 179.99, anchor: 'membership' });
+  } else {
+    recs.push({ name: 'My Best Buy Plus Membership', why: 'Free shipping + member prices', tier: 'must', price: 49.99, anchor: 'membership' });
+  }
+  recs.push({ name: 'Geek Squad Protection Plan', why: 'Speakers + AVR fail. Long coverage.', tier: 'must', price: 179.99, anchor: 'protection' });
+
+  // Install — high $ attach
+  if (has('setup-help', 'pro') || has('setup', 'atmos') || has('setup', 'custom')) {
+    recs.push({ name: 'Geek Squad A/V Installation', why: 'In-wall / Atmos / custom needs pro', tier: 'must', price: 299.99 });
+  } else if (has('setup-help', 'some') || has('setup', 'receiver') || has('setup', 'soundbar-rears')) {
+    recs.push({ name: 'Geek Squad Audio Setup', why: 'Calibration + system setup', tier: 'high', price: 149.99 });
+  }
+
+  // Cables
+  if (has('tv', 'buying') || has('tv', 'own')) {
+    recs.push({ name: 'HDMI 2.1 Cable (eARC)', why: 'Required for Atmos/lossless audio', tier: 'must', price: 24.99 });
+  } else if (has('tv', 'old')) {
+    recs.push({ name: 'Optical Cable (fallback)', why: 'Older TV — eARC may not work', tier: 'high', price: 19.99 });
+  }
+  if (has('setup', 'receiver') || has('setup', 'custom')) {
+    recs.push({ name: 'Speaker Wire (proper gauge)', why: 'Wired speakers need it', tier: 'must', price: 39.99 });
+    recs.push({ name: 'Banana Plugs', why: 'Cleaner connections', tier: 'high', price: 19.99 });
+  }
+  if (has('setup', 'receiver') || has('setup', 'custom') || has('setup', '2ch')) {
+    recs.push({ name: 'Subwoofer Cable', why: 'Separate sub connection', tier: 'high', price: 14.99 });
+  }
+
+  // Mounts
+  if (has('setup', 'atmos') || has('setup', 'custom')) {
+    recs.push({ name: 'In-Ceiling Atmos Speaker Mounts', why: 'Atmos overhead placement', tier: 'must', price: 79.99 });
+  }
+
+  // Apartment
+  if (has('apartment', 'yes')) {
+    recs.push({ name: 'Wireless TV Headphones', why: 'Late-night without complaints', tier: 'high', price: 99.99 });
+    recs.push({ name: 'Subwoofer Isolation Pad', why: 'Reduce vibration to neighbors', tier: 'high', price: 49.99 });
+  }
+
+  // Power / surge — always pitch
+  recs.push({ name: 'A/V Surge Protector', why: 'Protect the system', tier: 'must', price: 49.99 });
+  if (has('budget', 'premium') || has('budget', 'elite')) {
+    recs.push({ name: 'Power Conditioner', why: 'Premium system deserves clean power', tier: 'high', price: 199.99 });
+  }
+
+  // Multi-room
+  if (has('setup', 'multiroom')) {
+    recs.push({ name: 'Mesh Wi-Fi System', why: 'Multi-room audio needs strong network', tier: 'high', price: 299.99 });
+  }
+
+  // Accessories from checklist
+  const accChecklist = {
+    'hdmi-21':     { name: 'HDMI 2.1 Cable (eARC)', price: 24.99 },
+    'optical':     { name: 'Optical Cable', price: 14.99 },
+    'speaker-wire':{ name: 'Speaker Wire', price: 39.99 },
+    'banana':      { name: 'Banana Plugs', price: 19.99 },
+    'sub-cable':   { name: 'Subwoofer Cable', price: 14.99 },
+    'sb-mount':    { name: 'Soundbar Wall Mount', price: 49.99 },
+    'rear-stands': { name: 'Rear Speaker Stands', price: 89.99 },
+    'iso-pads':    { name: 'Speaker Isolation Pads', price: 29.99 },
+    'sub-pad':     { name: 'Subwoofer Isolation Pad', price: 49.99 },
+    'surge':       { name: 'A/V Surge Protector', price: 49.99 },
+    'power-cond':  { name: 'Power Conditioner', price: 199.99 },
+    'ups':         { name: 'UPS Battery Backup', price: 149.99 },
+    'headphones':  { name: 'Wireless TV Headphones', price: 99.99 },
+    'remote':      { name: 'Universal Remote', price: 79.99 },
+    'mesh':        { name: 'Mesh Wi-Fi System', price: 299.99 }
+  };
+  if (state.acc instanceof Set) {
+    state.acc.forEach(a => { if (accChecklist[a]) recs.push({ name: accChecklist[a].name, why: 'From accessory checklist', tier: 'high', price: accChecklist[a].price }); });
+  }
+
+  renderRecs_home_theater(recs);
+}
+
+function renderRecs_home_theater(recs) {
+  const list = document.getElementById('rec-list-home_theater');
+  const seen = new Set();
+  const unique = recs.filter(r => { if (seen.has(r.name)) return false; seen.add(r.name); return true; });
+  const order = { must: 0, high: 1, med: 2 };
+  unique.sort((a, b) => order[a.tier] - order[b.tier]);
+
+  const anchors = unique.filter(r => r.anchor);
+  const others = unique.filter(r => !r.anchor);
+  const total = unique.reduce((s, r) => s + (r.price || 0), 0);
+  const pct = Math.min(100, Math.round((total / HT_GOAL) * 100));
+  const met = total >= HT_GOAL;
+  const fmt = n => '$' + n.toFixed(0);
+
+  const goalHTML =
+    '<div class="goal-tracker">' +
+      '<div class="goal-tracker-row">' +
+        '<span class="goal-tracker-label">Attach Goal</span>' +
+        '<span class="goal-tracker-amount">' + fmt(total) + ' <span class="of">/ ' + fmt(HT_GOAL) + '</span></span>' +
+      '</div>' +
+      '<div class="goal-bar"><div class="goal-bar-fill ' + (met ? 'met' : '') + '" style="width:' + pct + '%;"></div></div>' +
+      '<div class="goal-status ' + (met ? 'met' : '') + '">' +
+        (met ? '✅ Goal met — keep stacking value!' : 'Keep building — ' + fmt(HT_GOAL - total) + ' to goal') +
+      '</div>' +
+    '</div>';
+
+  const anchorHTML = anchors.length === 0 ? '' :
+    '<div class="anchors">' +
+      '<div class="anchors-title">⭐ Always Pitch — the Big 3</div>' +
+      anchors.map(r =>
+        '<div class="anchor-item"><span class="name">' + r.name + '</span>' +
+        '<span class="price">' + (r.price > 0 ? fmt(r.price) : 'KPI') + '</span></div>'
+      ).join('') +
+    '</div>';
+
+  const itemsHTML = others.map(r => {
+    const priceTag = r.price > 0 ? '<span class="price">' + fmt(r.price) + '</span>' : '';
+    return '<div class="rec-item">' + priceTag +
+      '<div><div style="font-weight:600;">' + r.name + '</div>' +
+      '<div style="font-size:11px;color:#666;">' + r.why + '</div></div>' +
+      '<span class="rec-badge ' + r.tier + '">' +
+      (r.tier === 'must' ? 'PITCH' : r.tier === 'high' ? 'STRONG' : 'CONSIDER') +
+      '</span></div>';
+  }).join('');
+
+  list.innerHTML = goalHTML + anchorHTML + itemsHTML;
+}
+
+window.resetAll_home_theater = function() {
+  Object.keys(state).forEach(k => delete state[k]);
+  document.querySelectorAll('#view-home_theater .option.selected').forEach(b => b.classList.remove('selected'));
+  updateRecommendations_home_theater();
+};
+
+updateRecommendations_home_theater();
 })();
 </script>
 
